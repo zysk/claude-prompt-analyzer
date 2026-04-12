@@ -74,12 +74,17 @@ function parsePromptsFile(content) {
 
       const body = bodyLines.join('\n').trim();
 
+      const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
+      const charCount = body.length;
+
       prompts.push({
         promptNumber,
         sessionId: currentSessionId,
         time: timeStr,
-        type,           // '[prompt]' or '[slash-command]'
+        type,
         body,
+        wordCount,
+        charCount,
       });
       continue;
     }
