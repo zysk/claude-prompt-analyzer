@@ -84,8 +84,23 @@ node scripts/deploy.js --uninstall
 
 Removes hook and skill files. Existing captures in projects are untouched.
 
-## Requirements
+## Prerequisites
 
-- Node.js >= 16
-- Git (with `user.name` configured)
-- Claude Code
+Before running `deploy.js`, ensure the following are set up:
+
+1. **Node.js >= 16** - [Download](https://nodejs.org/)
+   ```bash
+   node --version   # must be v16+
+   ```
+
+2. **Git** with `user.name` configured
+   ```bash
+   git --version
+   git config --global user.name "Your Name"   # if not already set
+   ```
+
+3. **Claude Code** installed and initialized
+   - The `~/.claude/` directory must exist (created on first Claude Code run)
+   - Install: https://docs.anthropic.com/en/docs/claude-code
+
+The deploy script checks all three and will error or warn if anything is missing.
