@@ -6,9 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-function getGitUsername() {
+function getGitUsername(cwd) {
   try {
-    const name = execSync('git config user.name', { encoding: 'utf8' }).trim();
+    const name = execSync('git config user.name', { encoding: 'utf8', cwd }).trim();
     return sanitizeUsername(name);
   } catch {
     return 'unknown-user';
@@ -22,16 +22,14 @@ function sanitizeUsername(name) {
     .replace(/[^a-z0-9-]/g, '');
 }
 
-function getDateFolder() {
-  const now = new Date();
+function getDateFolder(now) {
   const dd = String(now.getDate()).padStart(2, '0');
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const yyyy = now.getFullYear();
   return `${dd}-${mm}-${yyyy}`;
 }
 
-function getTimeString() {
-  const now = new Date();
+function getTimeString(now) {
   let hours = now.getHours();
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -95,9 +93,10 @@ async function main() {
     process.exit(0);
   }
 
-  const username = getGitUsername();
-  const dateFolder = getDateFolder();
-  const timeStr = getTimeString();
+  const now = new Date();
+  const username = getGitUsername(cwd);
+  const dateFolder = getDateFolder(now);
+  const timeStr = getTimeString(now);
 
   const analyzerRoot = path.join(cwd, 'docs', 'prompt-analyzer');
   const dayFolder = path.join(analyzerRoot, username, dateFolder);
