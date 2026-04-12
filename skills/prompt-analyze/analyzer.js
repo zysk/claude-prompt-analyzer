@@ -235,31 +235,358 @@ function buildSessionBreakdown(prompts, sessions) {
   });
 }
 
-// ─── Stubs (Task 3) ───────────────────────────────────────────────────────────
+// ─── Classification helpers ────────────────────────────────────────────────────
+
+const IMPERATIVE_VERBS = new Set([
+  'create', 'fix', 'add', 'update', 'remove', 'build', 'implement', 'write',
+  'run', 'check', 'delete', 'move', 'rename', 'refactor', 'test', 'debug',
+  'deploy', 'install', 'configure', 'set', 'make', 'change', 'modify',
+  'replace', 'merge', 'revert', 'reset', 'clean', 'format', 'lint', 'upgrade',
+  'downgrade', 'migrate', 'convert', 'extract', 'split', 'combine', 'wrap',
+  'unwrap',
+]);
+
+const QUESTION_STARTERS = new Set([
+  'who', 'what', 'why', 'how', 'where', 'when', 'can', 'does', 'is', 'are',
+  'will', 'would', 'could', 'should', 'do',
+]);
 
 /**
- * Stub: classifies prompts by intent category.
- * Task 3 will implement this.
+ * Returns true when `text` contains 2+ context signals:
+ * file path, code block, line number reference, or error keyword.
  *
- * @param {object[]} _prompts
- * @returns {object[]}
+ * @param {string} text - original prompt body
+ * @returns {boolean}
  */
-function classifyPrompts(_prompts) {
-  return [];
+function hasContextSignals(text) {
+  const signals = [
+    /[\w./\\-]+\.\w{1,6}(:\d+)?/.test(text),                // file path
+    /```/.test(text),                                          // code block
+    /(?::\d+|line\s+\d+)/i.test(text),                       // line number
+    /\b(?:errors?|exceptions?|undefined|null|failed|crash|traceback|stacktrace|typeerror|syntaxerror|referenceerror|cannot|unable)\b/i.test(text), // error keywords
+  ];
+  return signals.filter(Boolean).length >= 2;
 }
 
 /**
- * Stub: detects behavioral patterns in the prompt stream.
- * Task 3 will implement this.
+ * Checks learned-rules.json patterns against the current prompt.
+ * Returns a classification object if a rule matches, or null.
  *
- * @param {object[]} _prompts
+ * @param {object[]} learnedRules
+ * @param {object} prompt
+ * @param {object|null} prevPrompt
+ * @returns {{ suggested: string, confidence: string, reason: string, source: string }|null}
+ */
+function applyLearnedRules(learnedRules, prompt, prevPrompt) {
+  if (!Array.isArray(learnedRules) || learnedRules.length === 0) return null;
+
+  const text = prompt.body;
+  const lowerText = text.toLowerCase();
+
+  for (const rule of learnedRules) {
+    if (!rule.pattern || !rule.classification) continue;
+
+    try {
+      const regex = new RegExp(rule.pattern, 'i');
+      if (regex.test(text)) {
+        return {
+          suggested: rule.classification,
+          confidence: rule.confidence || 'medium',
+          reason: rule.reason || `Matched learned rule: ${rule.pattern}`,
+          source: 'learned-rule',
+        };
+      }
+    } catch (_e) {
+      // Invalid regex in learned rules — skip silently
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Adjusts a base confidence level using historical accuracy for a rule type.
+ *
+ * @param {'high'|'medium'|'low'} baseConfidence
+ * @param {string} ruleType
+ * @param {object} ruleAccuracy - map of ruleType → accuracy number (0-1)
+ * @returns {'high'|'medium'|'low'}
+ */
+function getAdjustedConfidence(baseConfidence, ruleType, ruleAccuracy) {
+  if (!ruleAccuracy || typeof ruleAccuracy !== 'object') return baseConfidence;
+  const accuracy = ruleAccuracy[ruleType];
+  if (typeof accuracy !== 'number') return baseConfidence;
+  if (accuracy > 0.85) return 'high';
+  if (accuracy >= 0.60) return 'medium';
+  return 'low';
+}
+
+/**
+ * Heuristic classification of a single prompt.
+ *
+ * @param {string} text - original body
+ * @param {string} lowerText - lowercase body
+ * @param {object} prompt
+ * @param {object|null} prevPrompt
+ * @param {object} ruleAccuracy - map of ruleType → accuracy from corrections.json
+ * @returns {{ suggested: string, confidence: string, reason: string, source: string }}
+ */
+function heuristicClassify(text, lowerText, prompt, prevPrompt, ruleAccuracy) {
+  const wordCount = prompt.wordCount;
+  const charCount = prompt.charCount;
+  const contextRich = hasContextSignals(text);
+
+  // 1. Single-word
+  if (wordCount === 1) {
+    return {
+      suggested: 'single-word',
+      confidence: getAdjustedConfidence('high', 'single-word', ruleAccuracy),
+      reason: 'Prompt contains exactly one word',
+      source: 'heuristic',
+    };
+  }
+
+  // 2. Context-rich
+  if (contextRich) {
+    return {
+      suggested: 'context-rich',
+      confidence: getAdjustedConfidence('high', 'context-rich', ruleAccuracy),
+      reason: 'Contains 2+ context signals (file path, code block, line number, or error keyword)',
+      source: 'heuristic',
+    };
+  }
+
+  // 3. Question
+  const firstWord = lowerText.trim().split(/\s+/)[0].replace(/[^a-z]/g, '');
+  if (text.trim().endsWith('?') || QUESTION_STARTERS.has(firstWord)) {
+    return {
+      suggested: 'question',
+      confidence: getAdjustedConfidence('high', 'question', ruleAccuracy),
+      reason: text.trim().endsWith('?')
+        ? 'Prompt ends with a question mark'
+        : `Prompt starts with question word "${firstWord}"`,
+      source: 'heuristic',
+    };
+  }
+
+  // 4. Imperative
+  if (IMPERATIVE_VERBS.has(firstWord)) {
+    const baseConf = contextRich ? 'high' : 'medium';
+    return {
+      suggested: 'imperative',
+      confidence: getAdjustedConfidence(baseConf, 'imperative', ruleAccuracy),
+      reason: `Prompt starts with imperative verb "${firstWord}"`,
+      source: 'heuristic',
+    };
+  }
+
+  // 5. Vague
+  if (charCount < 20 && !contextRich && wordCount > 1) {
+    return {
+      suggested: 'vague',
+      confidence: getAdjustedConfidence('low', 'vague', ruleAccuracy),
+      reason: 'Short prompt (< 20 chars) with no context signals; may be a follow-up',
+      source: 'heuristic',
+    };
+  }
+
+  // 6. Other
+  return {
+    suggested: 'other',
+    confidence: getAdjustedConfidence('low', 'other', ruleAccuracy),
+    reason: 'Does not match any heuristic pattern',
+    source: 'heuristic',
+  };
+}
+
+// ─── Classification ────────────────────────────────────────────────────────────
+
+/**
+ * Classifies each non-slash-command prompt by intent category.
+ * Checks learned-rules.json first; falls back to heuristic rules.
+ * Adjusts confidence using corrections.json accuracy data if present.
+ *
+ * @param {object[]} prompts
+ * @param {string} correctionsPath - absolute path to corrections.json
+ * @param {string} learnedRulesPath - absolute path to learned-rules.json
+ * @returns {object[]}
+ */
+function classifyPrompts(prompts, correctionsPath, learnedRulesPath) {
+  // Load optional self-improvement data
+  let learnedRules = [];
+  if (learnedRulesPath && fs.existsSync(learnedRulesPath)) {
+    try {
+      learnedRules = JSON.parse(fs.readFileSync(learnedRulesPath, 'utf8'));
+    } catch (_e) {
+      // Malformed file — proceed without learned rules
+    }
+  }
+
+  let ruleAccuracy = null;
+  if (correctionsPath && fs.existsSync(correctionsPath)) {
+    try {
+      const corrections = JSON.parse(fs.readFileSync(correctionsPath, 'utf8'));
+      ruleAccuracy = corrections.ruleAccuracy || null;
+    } catch (_e) {
+      // Malformed file — proceed without accuracy adjustments
+    }
+  }
+
+  const classifications = [];
+  const nonSlashPrompts = prompts.filter((p) => p.type !== '[slash-command]');
+
+  for (let idx = 0; idx < nonSlashPrompts.length; idx++) {
+    const prompt = nonSlashPrompts[idx];
+    const prevPrompt = idx > 0 ? nonSlashPrompts[idx - 1] : null;
+    const text = prompt.body;
+    const lowerText = text.toLowerCase();
+
+    // Try learned rules first
+    const learnedResult = applyLearnedRules(learnedRules, prompt, prevPrompt);
+
+    if (learnedResult) {
+      classifications.push({
+        promptNumber: prompt.promptNumber,
+        suggested: learnedResult.suggested,
+        confidence: learnedResult.confidence,
+        reason: learnedResult.reason,
+        source: learnedResult.source,
+      });
+    } else {
+      const result = heuristicClassify(text, lowerText, prompt, prevPrompt, ruleAccuracy);
+      classifications.push({
+        promptNumber: prompt.promptNumber,
+        suggested: result.suggested,
+        confidence: result.confidence,
+        reason: result.reason,
+        source: result.source,
+      });
+    }
+  }
+
+  return classifications;
+}
+
+// ─── Pattern detection helpers ─────────────────────────────────────────────────
+
+/**
+ * Normalizes text for similarity comparison:
+ * lowercase, strip non-alphanumeric, collapse spaces.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeForComparison(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Computes Jaccard similarity between two strings as word sets.
+ *
+ * @param {string} a
+ * @param {string} b
+ * @returns {number} 0-1
+ */
+function jaccardSimilarity(a, b) {
+  const setA = new Set(a.split(' ').filter(Boolean));
+  const setB = new Set(b.split(' ').filter(Boolean));
+
+  if (setA.size === 0 && setB.size === 0) return 1;
+  if (setA.size === 0 || setB.size === 0) return 0;
+
+  let intersectionCount = 0;
+  for (const word of setA) {
+    if (setB.has(word)) intersectionCount++;
+  }
+
+  const unionCount = setA.size + setB.size - intersectionCount;
+  return intersectionCount / unionCount;
+}
+
+/**
+ * Groups prompts with Jaccard similarity > 0.8 into repetition clusters.
+ *
+ * @param {object[]} prompts - non-slash-command prompts only
+ * @returns {Array<{ pattern: string, count: number, promptNumbers: number[] }>}
+ */
+function detectRepetitions(prompts) {
+  const normalized = prompts.map((p) => normalizeForComparison(p.body));
+  const visited = new Set();
+  const repetitions = [];
+
+  for (let i = 0; i < prompts.length; i++) {
+    if (visited.has(i)) continue;
+
+    const group = [i];
+    for (let j = i + 1; j < prompts.length; j++) {
+      if (visited.has(j)) continue;
+      if (jaccardSimilarity(normalized[i], normalized[j]) > 0.8) {
+        group.push(j);
+        visited.add(j);
+      }
+    }
+
+    if (group.length > 1) {
+      visited.add(i);
+      repetitions.push({
+        pattern: prompts[i].body.slice(0, 80), // representative sample
+        count: group.length,
+        promptNumbers: group.map((idx) => prompts[idx].promptNumber),
+      });
+    }
+  }
+
+  return repetitions;
+}
+
+// ─── Pattern detection ─────────────────────────────────────────────────────────
+
+/**
+ * Detects behavioral patterns across all non-slash-command prompts.
+ *
+ * @param {object[]} prompts
  * @returns {object}
  */
-function detectPatterns(_prompts) {
+function detectPatterns(prompts) {
+  const nonSlash = prompts.filter((p) => p.type !== '[slash-command]');
+
+  let singleWordPrompts = 0;
+  let questionPrompts = 0;
+  let imperativePrompts = 0;
+  let contextRichPrompts = 0;
+  let vaguePrompts = 0;
+
+  for (const p of nonSlash) {
+    const lowerText = p.body.toLowerCase();
+    const firstWord = lowerText.trim().split(/\s+/)[0].replace(/[^a-z]/g, '');
+    const contextRich = hasContextSignals(p.body);
+
+    if (p.wordCount === 1) {
+      singleWordPrompts++;
+    } else if (contextRich) {
+      contextRichPrompts++;
+    } else if (p.body.trim().endsWith('?') || QUESTION_STARTERS.has(firstWord)) {
+      questionPrompts++;
+    } else if (IMPERATIVE_VERBS.has(firstWord)) {
+      imperativePrompts++;
+    } else if (p.charCount < 20 && !contextRich && p.wordCount > 1) {
+      vaguePrompts++;
+    }
+  }
+
+  const repetitions = detectRepetitions(nonSlash);
+
   return {
-    singleWordPrompts: 0,
-    veryShortPrompts: 0,
-    repeatedPrompts: 0,
+    singleWordPrompts,
+    questionPrompts,
+    imperativePrompts,
+    contextRichPrompts,
+    vaguePrompts,
+    repetitions,
   };
 }
 
@@ -290,9 +617,13 @@ function main() {
   const date = parts[parts.length - 1];
   const username = parts[parts.length - 2];
 
+  const userFolder = path.dirname(dayFolder);
+  const correctionsPath = path.join(userFolder, 'corrections.json');
+  const learnedRulesPath = path.join(userFolder, 'learned-rules.json');
+
   const slashAnalysis = analyzeSlashCommands(prompts);
   const stats = computeStats(prompts);
-  const classifications = classifyPrompts(prompts);
+  const classifications = classifyPrompts(prompts, correctionsPath, learnedRulesPath);
   const patterns = detectPatterns(prompts);
   const timeDistribution = computeTimeDistribution(prompts);
   const sessionBreakdown = buildSessionBreakdown(prompts, sessions);
