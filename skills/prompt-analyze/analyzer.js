@@ -7,6 +7,8 @@ const path = require('path');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+const VERSION = '1.1.0';
+
 const BUILT_IN_COMMANDS = new Set([
   '/help', '/commit', '/review', '/insights', '/init', '/clear', '/compact',
   '/cost', '/login', '/logout', '/status', '/doctor', '/config', '/bug',

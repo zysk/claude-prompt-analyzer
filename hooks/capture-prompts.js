@@ -9,6 +9,7 @@ const { execSync } = require('child_process');
 
 // --- Config ---
 
+const VERSION = '1.1.0';
 const PROMPT_ANALYSIS_ROOT = path.join(os.homedir(), 'prompt-analysis');
 const PROJECTS_FILE = path.join(PROMPT_ANALYSIS_ROOT, 'projects.json');
 
@@ -70,7 +71,7 @@ function getProjectName(cwd) {
   const normalizedCwd = cwd.replace(/\\/g, '/').replace(/\/+$/, '');
   const baseName = path.basename(normalizedCwd);
 
-  // Read or create projects.json
+  // Read or create projects.json (last-write-wins; same name = same project)
   let projects = {};
   if (fs.existsSync(PROJECTS_FILE)) {
     try {
@@ -78,27 +79,12 @@ function getProjectName(cwd) {
     } catch { /* ignore parse errors */ }
   }
 
-  // Check if this cwd already has a mapping
-  for (const [name, cwdPath] of Object.entries(projects)) {
-    if (cwdPath.replace(/\\/g, '/') === normalizedCwd) {
-      return name;
-    }
-  }
-
-  // No existing mapping; find a unique name
-  let projectName = baseName;
-  let counter = 2;
-  while (projects[projectName] && projects[projectName].replace(/\\/g, '/') !== normalizedCwd) {
-    projectName = `${baseName}-${counter}`;
-    counter++;
-  }
-
-  // Save mapping
-  projects[projectName] = normalizedCwd;
+  // Always map baseName to this cwd (overwrites if different path)
+  projects[baseName] = normalizedCwd;
   fs.mkdirSync(PROMPT_ANALYSIS_ROOT, { recursive: true });
   fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf8');
 
-  return projectName;
+  return baseName;
 }
 
 // --- Main ---

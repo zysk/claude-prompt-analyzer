@@ -18,6 +18,8 @@ const { execSync } = require('child_process');
 // Constants
 // ---------------------------------------------------------------------------
 
+const VERSION = '1.1.0';
+
 const HOOK_COMMAND = 'node ~/.claude/hooks/capture-prompts.js';
 const HOOK_ENTRY = {
   type: 'command',
@@ -27,6 +29,7 @@ const HOOK_ENTRY = {
 
 const HOME = os.homedir();
 const CLAUDE_DIR = path.join(HOME, '.claude');
+const VERSION_FILE = path.join(CLAUDE_DIR, 'prompt-analyzer-version.json');
 
 // Source paths (relative to repo root, resolved at runtime)
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -76,6 +79,34 @@ function banner(msg) {
   print('================================');
   print(`  ${msg}`);
   print('================================');
+}
+
+function getDeployedVersion() {
+  if (!fs.existsSync(VERSION_FILE)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(VERSION_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeVersion() {
+  const data = {
+    version: VERSION,
+    deployedAt: new Date().toISOString().slice(0, 10),
+  };
+  fs.writeFileSync(VERSION_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function checkVersion() {
+  const deployed = getDeployedVersion();
+  if (!deployed) {
+    print(`  Installing v${VERSION}`);
+  } else if (deployed.version === VERSION) {
+    print(`  Already at v${VERSION} (deployed ${deployed.deployedAt}). Re-deploying files.`);
+  } else {
+    print(`  Updating v${deployed.version} -> v${VERSION}`);
+  }
 }
 
 function ensureDir(dirPath) {
@@ -292,14 +323,15 @@ function printSuccess() {
     // leave default
   }
 
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
   print('');
+  print(`  Version: ${VERSION}`);
   print('  Your prompts will be automatically captured in any project.');
   print('  Run /prompt-analyze anytime to get feedback.');
   print('');
-  print(`  Captured prompts: <project>/docs/prompt-analyzer/${gitUser}/${today}/`);
+  print(`  Captured prompts: ~/prompt-analysis/<project>/${gitUser}/<date>/`);
   print('  Analysis reports: same folder (analysis.md + report.html)');
+  print('');
+  print('  To update: pull latest repo changes, run this script again.');
   print('');
 }
 
@@ -317,6 +349,9 @@ function uninstall() {
 
   rmDir(path.join(CLAUDE_DIR, 'skills', 'prompt-analyze'));
   ok('Removed skills/prompt-analyze/');
+
+  rmFile(VERSION_FILE);
+  ok('Removed version file');
 
   section('Updating settings.json...');
 
@@ -371,9 +406,11 @@ if (isUninstall) {
   uninstall();
 } else {
   banner('Prompt Analyzer for Claude Code');
+  checkVersion();
   checkPrerequisites();
   copyFiles();
   updateSettings();
   verifyInstall();
+  writeVersion();
   printSuccess();
 }
