@@ -1,6 +1,6 @@
 # Claude Prompt Analyzer
 
-**Current version: 1.3.0**
+**Current version: 1.2.0**
 
 A self-improving prompt quality analysis system for Claude Code. Automatically captures your prompts and analyzes them to help you write better prompts every day.
 
