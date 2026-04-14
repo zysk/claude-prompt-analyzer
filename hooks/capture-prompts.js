@@ -4,7 +4,15 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { execSync } = require('child_process');
+
+// --- Config ---
+
+const PROMPT_ANALYSIS_ROOT = path.join(os.homedir(), 'prompt-analysis');
+const PROJECTS_FILE = path.join(PROMPT_ANALYSIS_ROOT, 'projects.json');
+
+// --- Helpers ---
 
 function getGitUsername(cwd) {
   try {
@@ -58,30 +66,42 @@ function getLastSessionId(content) {
   return idMatch ? idMatch[1] : null;
 }
 
-function ensureGitignore(cwd) {
-  const gitignorePath = path.join(cwd, '.gitignore');
-  const entries = [
-    'docs/prompt-analyzer/**/prompts.md',
-    'docs/prompt-analyzer/**/metrics.json'
-  ];
+function getProjectName(cwd) {
+  const normalizedCwd = cwd.replace(/\\/g, '/').replace(/\/+$/, '');
+  const baseName = path.basename(normalizedCwd);
 
-  let existing = '';
-  if (fs.existsSync(gitignorePath)) {
-    existing = fs.readFileSync(gitignorePath, 'utf8');
+  // Read or create projects.json
+  let projects = {};
+  if (fs.existsSync(PROJECTS_FILE)) {
+    try {
+      projects = JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf8'));
+    } catch { /* ignore parse errors */ }
   }
 
-  const missing = entries.filter(e => !existing.includes(e));
-  if (missing.length === 0) return;
+  // Check if this cwd already has a mapping
+  for (const [name, cwdPath] of Object.entries(projects)) {
+    if (cwdPath.replace(/\\/g, '/') === normalizedCwd) {
+      return name;
+    }
+  }
 
-  const block = [
-    '',
-    '# Prompt Analyzer - Privacy',
-    ...missing,
-    ''
-  ].join('\n');
+  // No existing mapping; find a unique name
+  let projectName = baseName;
+  let counter = 2;
+  while (projects[projectName] && projects[projectName].replace(/\\/g, '/') !== normalizedCwd) {
+    projectName = `${baseName}-${counter}`;
+    counter++;
+  }
 
-  fs.appendFileSync(gitignorePath, block, 'utf8');
+  // Save mapping
+  projects[projectName] = normalizedCwd;
+  fs.mkdirSync(PROMPT_ANALYSIS_ROOT, { recursive: true });
+  fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf8');
+
+  return projectName;
 }
+
+// --- Main ---
 
 async function main() {
   const chunks = [];
@@ -107,13 +127,12 @@ async function main() {
   const username = getGitUsername(cwd);
   const dateFolder = getDateFolder(now);
   const timeStr = getTimeString(now);
+  const projectName = getProjectName(cwd);
 
-  const analyzerRoot = path.join(cwd, 'docs', 'prompt-analyzer');
-  const dayFolder = path.join(analyzerRoot, username, dateFolder);
+  const dayFolder = path.join(PROMPT_ANALYSIS_ROOT, projectName, username, dateFolder);
   const promptsFile = path.join(dayFolder, 'prompts.md');
 
   fs.mkdirSync(dayFolder, { recursive: true });
-  ensureGitignore(cwd);
 
   let existingContent = '';
   if (fs.existsSync(promptsFile)) {

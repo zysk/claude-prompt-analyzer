@@ -45,10 +45,20 @@ Run the following Bash command from the working directory of the project where t
 git config user.name
 ```
 
-Take the output, convert to lowercase, replace spaces with hyphens. Example: `"Arijit Saha"` becomes `"arijit-saha"`. This is the `{username}`.
+Take the output, convert to lowercase, replace spaces with hyphens, strip non-alphanumeric except hyphens. Example: `"Arijit Saha"` becomes `"arijit-saha"`. This is the `{username}`.
+
+**Identify the project:**
+
+Run the following Bash command to get the project name:
+```bash
+node -e "const p=require('path'),f=require('fs'),o=require('os');const pf=p.join(o.homedir(),'prompt-analysis','projects.json');if(f.existsSync(pf)){const d=JSON.parse(f.readFileSync(pf,'utf8')),cwd=process.cwd().replace(/\\\\/g,'/').replace(/\\/+$/,'');for(const[n,c]of Object.entries(d)){if(c.replace(/\\\\/g,'/')===cwd){console.log(n);process.exit(0);}};console.log(p.basename(cwd));}else{console.log(p.basename(process.cwd()));}"
+```
+
+This is the `{project}`.
 
 Set:
-- `USER_FOLDER` = `docs/prompt-analyzer/{username}/` (relative to project root)
+- `PROMPT_ANALYSIS_ROOT` = `~/prompt-analysis/` (user home directory)
+- `USER_FOLDER` = `~/prompt-analysis/{project}/{username}/`
 
 **Read existing state (do not error if files are missing; treat as empty/default):**
 
@@ -67,7 +77,7 @@ If any file is missing, treat it as if it contains `{}` or `[]` as appropriate. 
 
 **List day folders:**
 
-From `USER_FOLDER`, list all subdirectories whose names match the pattern `DD-MM-YYYY` (e.g., `11-04-2026`).
+From `USER_FOLDER` (`~/prompt-analysis/{project}/{username}/`), list all subdirectories whose names match the pattern `DD-MM-YYYY` (e.g., `11-04-2026`).
 
 **Identify unanalyzed days:**
 

@@ -35,7 +35,7 @@ That's it. Your prompts will be captured in every project you work on.
 You type a prompt
        |
        v
-Capture Hook (automatic) --> docs/prompt-analyzer/<user>/<date>/prompts.md
+Capture Hook (automatic) --> ~/prompt-analysis/<project>/<user>/<date>/prompts.md
        |
 You run /prompt-analyze
        |
@@ -59,22 +59,27 @@ scripts/
   deploy.js                 # One-command setup/uninstall
 ```
 
-## Per-Project Output
+## Centralized Output
+
+All data is stored in your home directory under `~/prompt-analysis/`, organized by project:
 
 ```
-<your-project>/docs/prompt-analyzer/
-  .gitignore                # Auto-created; ignores prompts.md + metrics.json
-  <username>/
-    meta.json               # Analysis state
-    scores.json             # Rolling scores + trends
-    corrections.json        # Classification feedback loop
-    learned-rules.json      # User-specific patterns
-    DD-MM-YYYY/
-      prompts.md            # Raw captures (gitignored)
-      metrics.json          # Pre-processed stats (gitignored)
-      analysis.md           # LLM analysis (tracked)
-      report.html           # Visual dashboard (tracked)
+~/prompt-analysis/
+  projects.json               # Maps project names to their full paths
+  <project-name>/
+    <username>/
+      meta.json               # Analysis state
+      scores.json             # Rolling scores + trends
+      corrections.json        # Classification feedback loop
+      learned-rules.json      # User-specific patterns
+      DD-MM-YYYY/
+        prompts.md            # Raw captures
+        metrics.json          # Pre-processed stats
+        analysis.md           # LLM analysis
+        report.html           # Visual dashboard
 ```
+
+This makes it easy to review prompts across all projects from one location.
 
 ## Uninstall
 
