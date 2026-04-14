@@ -1,5 +1,7 @@
 # Claude Prompt Analyzer
 
+**Current version: 1.1.0**
+
 A self-improving prompt quality analysis system for Claude Code. Automatically captures your prompts and analyzes them to help you write better prompts every day.
 
 ## Features
@@ -9,7 +11,8 @@ A self-improving prompt quality analysis system for Claude Code. Automatically c
 - **10-dimension scoring**: Clarity, specificity, scope, context-giving, actionability, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness
 - **Day-over-day tracking**: Scores, trends, streaks, and milestones
 - **Self-improving**: Classification accuracy improves over time based on LLM feedback
-- **Privacy-conscious**: Raw prompts are gitignored; only analysis results are tracked
+- **Centralized storage**: All prompts stored in `~/prompt-analysis/`, organized by project
+- **Version-aware**: Deploy script detects and shows version changes on update
 - **Multi-user safe**: Each user gets their own scoped folder
 - **Best practices anchored**: Quality standards fetched from latest Anthropic docs at runtime
 
@@ -81,13 +84,25 @@ All data is stored in your home directory under `~/prompt-analysis/`, organized 
 
 This makes it easy to review prompts across all projects from one location.
 
+## Updating
+
+When a new version is available, pull the latest changes and re-run the deploy script:
+
+```bash
+cd claude-prompt-analyzer
+git pull
+node scripts/deploy.js
+```
+
+The deploy script will show the version change (e.g., `Updating v1.0.0 -> v1.1.0`) and overwrite deployed files. Existing captured data is never touched.
+
 ## Uninstall
 
 ```bash
 node scripts/deploy.js --uninstall
 ```
 
-Removes hook and skill files. Existing captures in projects are untouched.
+Removes hook and skill files. Existing captures in `~/prompt-analysis/` are untouched.
 
 ## Prerequisites
 
