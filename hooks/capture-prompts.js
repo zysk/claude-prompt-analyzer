@@ -9,27 +9,11 @@ const { execSync } = require('child_process');
 
 // --- Config ---
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const PROMPT_ANALYSIS_ROOT = path.join(os.homedir(), 'prompt-analysis');
 const PROJECTS_FILE = path.join(PROMPT_ANALYSIS_ROOT, 'projects.json');
 
 // --- Helpers ---
-
-function getGitUsername(cwd) {
-  try {
-    const name = execSync('git config user.name', { encoding: 'utf8', cwd }).trim();
-    return sanitizeUsername(name);
-  } catch {
-    return 'unknown-user';
-  }
-}
-
-function sanitizeUsername(name) {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
-}
 
 function getDateFolder(now) {
   const dd = String(now.getDate()).padStart(2, '0');
@@ -110,12 +94,11 @@ async function main() {
   }
 
   const now = new Date();
-  const username = getGitUsername(cwd);
   const dateFolder = getDateFolder(now);
   const timeStr = getTimeString(now);
   const projectName = getProjectName(cwd);
 
-  const dayFolder = path.join(PROMPT_ANALYSIS_ROOT, projectName, username, dateFolder);
+  const dayFolder = path.join(PROMPT_ANALYSIS_ROOT, projectName, 'prompts', dateFolder);
   const promptsFile = path.join(dayFolder, 'prompts.md');
 
   fs.mkdirSync(dayFolder, { recursive: true });

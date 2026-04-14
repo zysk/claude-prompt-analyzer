@@ -1,6 +1,6 @@
 # Claude Prompt Analyzer
 
-**Current version: 1.1.0**
+**Current version: 1.2.0**
 
 A self-improving prompt quality analysis system for Claude Code. Automatically captures your prompts and analyzes them to help you write better prompts every day.
 
@@ -12,6 +12,8 @@ A self-improving prompt quality analysis system for Claude Code. Automatically c
 - **Day-over-day tracking**: Scores, trends, streaks, and milestones
 - **Self-improving**: Classification accuracy improves over time based on LLM feedback
 - **Centralized storage**: All prompts stored in `~/prompt-analysis/`, organized by project
+- **Run from anywhere**: `/prompt-analyze` works from any directory; scans all projects
+- **Progressive reports**: Each report builds on the last; tracks whether you acted on feedback
 - **Version-aware**: Deploy script detects and shows version changes on update
 - **Multi-user safe**: Each user gets their own scoped folder
 - **Best practices anchored**: Quality standards fetched from latest Anthropic docs at runtime
@@ -70,19 +72,21 @@ All data is stored in your home directory under `~/prompt-analysis/`, organized 
 ~/prompt-analysis/
   projects.json               # Maps project names to their full paths
   <project-name>/
-    <username>/
-      meta.json               # Analysis state
-      scores.json             # Rolling scores + trends
-      corrections.json        # Classification feedback loop
-      learned-rules.json      # User-specific patterns
+    prompts/                  # Raw captured data
       DD-MM-YYYY/
-        prompts.md            # Raw captures
+        prompts.md            # Captured prompts
         metrics.json          # Pre-processed stats
+    reports/                  # Analysis output
+      DD-MM-YYYY/
         analysis.md           # LLM analysis
         report.html           # Visual dashboard
+      scores.json             # Rolling scores + trends
+      meta.json               # Analysis state
+      corrections.json        # Classification feedback loop
+      learned-rules.json      # User-specific patterns
 ```
 
-This makes it easy to review prompts across all projects from one location.
+Review all projects from one location. `/prompt-analyze` scans everything automatically.
 
 ## Updating
 
