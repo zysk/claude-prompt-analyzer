@@ -18,7 +18,7 @@ const { execSync } = require('child_process');
 // Constants
 // ---------------------------------------------------------------------------
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 const HOOK_COMMAND = 'node ~/.claude/hooks/capture-prompts.js';
 const HOOK_ENTRY = {

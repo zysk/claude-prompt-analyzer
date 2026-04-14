@@ -52,17 +52,23 @@ Read the file at `~/prompt-analysis/projects.json` using the Read tool. This fil
 
 If the file doesn't exist or is empty, print: "No prompts captured yet. Use Claude Code in any project; prompts are captured automatically." Then exit.
 
-**2b. Scan for unanalyzed days across ALL projects:**
+**2b. Collect all dates with prompts across ALL projects:**
 
 For each project in `projects.json`:
 1. List day folders at `~/prompt-analysis/{project}/prompts/` matching `DD-MM-YYYY`
 2. For each day folder: check if `prompts.md` exists
-3. Check if a corresponding `~/prompt-analysis/{project}/reports/{DD-MM-YYYY}/analysis.md` exists
-4. If prompts.md exists but analysis.md does NOT: this day is unanalyzed
+3. Build a map: `{ "DD-MM-YYYY": ["project-a", "project-b", ...] }` of dates to projects with prompts
 
-**2c. Read state files for each project with unanalyzed days:**
+**2c. Check which dates are already analyzed:**
 
-For each project that has unanalyzed days, read these files from `~/prompt-analysis/{project}/reports/` if they exist:
+A date is **analyzed** if `~/prompt-analysis/reports/{DD-MM-YYYY}/analysis.md` exists.
+Reports are in ONE unified folder at `~/prompt-analysis/reports/`, NOT per-project.
+
+A date is **unanalyzed** if it has prompts in any project but no `analysis.md` in the unified reports folder.
+
+**2d. Read state files:**
+
+Read these files from `~/prompt-analysis/reports/` if they exist:
 - `meta.json`
 - `scores.json`
 - `corrections.json`
@@ -70,23 +76,23 @@ For each project that has unanalyzed days, read these files from `~/prompt-analy
 
 If any file is missing, treat as empty/default.
 
-**2d. Print summary:**
+**2e. Print summary:**
 
 ```
 Prompt Analysis Scan
 ====================
-Projects found: {N}
+Projects registered: {N}
+Dates with prompts: {M}
+Unanalyzed dates: {K}
 
-{project-name}: {M} unanalyzed day(s)
-  - {DD-MM-YYYY}
-  - {DD-MM-YYYY}
+{DD-MM-YYYY}: {project-a} ({N} prompts), {project-b} ({N} prompts)
+{DD-MM-YYYY}: {project-c} ({N} prompts)
+...
 
-{project-name}: all days analyzed
-
-Analyzing {total} day(s) across {N} project(s)...
+Analyzing oldest first.
 ```
 
-If no unanalyzed days across any project: "All days analyzed across all projects. Latest scores: ..." Then exit.
+If no unanalyzed dates: "All days analyzed. Latest composite: {X.X}/10." Then exit.
 
 ---
 
@@ -96,37 +102,38 @@ Step 3 is now part of Step 2. Proceed to Step 4.
 
 ---
 
-## Step 4: Analyze Each Unanalyzed Day
+## Step 4: Analyze Each Unanalyzed Date
 
-Process each project, then each unanalyzed day within it (oldest first). Complete all sub-steps for a day before moving to the next.
+Process each unanalyzed DATE (oldest first). Each date may have prompts from MULTIPLE projects. Complete all sub-steps for a date before moving to the next.
 
 ---
 
-### Step 4a: Run Pre-Processor
+### Step 4a: Run Pre-Processor for each project on this date
 
-Run via Bash:
+For each project that has prompts on this date, run:
 ```bash
-node ~/.claude/skills/prompt-analyze/analyzer.js "{absolute-path-to-prompts-day-folder}"
+node ~/.claude/skills/prompt-analyze/analyzer.js "{absolute-path}"
 ```
 
-The path is `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/`.
+Where path is `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/`.
 
-The script writes `metrics.json` to that folder. If it exits non-zero, print the error and skip this day.
+The script writes `metrics.json` to that folder. If it exits non-zero for a project, skip that project and note the error.
 
 ---
 
-### Step 4b: Read Inputs (including previous reports for progressive analysis)
+### Step 4b: Read Inputs (all projects for this date + previous reports)
 
-Read ALL of the following:
-1. `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/prompts.md` - today's raw prompts
-2. `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/metrics.json` - pre-processor output
-3. `~/prompt-analysis/{project}/reports/scores.json` - historical scores
+For each project active on this date, read:
+1. `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/prompts.md`
+2. `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/metrics.json`
+
+Also read from the unified reports folder:
+3. `~/prompt-analysis/reports/scores.json` - historical scores
 4. **Previous analysis** (for progressive improvement tracking):
-   - Read the MOST RECENT `analysis.md` from `~/prompt-analysis/{project}/reports/` (the latest date folder that has one)
-   - This gives you context on what feedback was given last time
+   - Read the MOST RECENT `analysis.md` from `~/prompt-analysis/reports/` (the latest date folder that has one)
    - Check if the user improved on the areas flagged in that report
 
-This progressive approach means each report builds on the last. You track whether the user acted on previous feedback.
+This progressive approach means each report builds on the last.
 
 ---
 
@@ -185,31 +192,31 @@ Corrections are CLASSIFICATION ONLY (what type of prompt, not quality). Use only
 
 ### Step 4f: Write analysis.md
 
-Write to `~/prompt-analysis/{project}/reports/{DD-MM-YYYY}/analysis.md`.
+Write to `~/prompt-analysis/reports/{DD-MM-YYYY}/analysis.md`.
 
-Create the `reports/{DD-MM-YYYY}/` directory if needed.
+Create the directory if needed. This is the UNIFIED reports folder; one analysis per date covering ALL active projects.
 
 Use this template (fill ALL placeholders):
 
 ```markdown
 # Prompt Analysis - {DD-MM-YYYY}
-# Project: {project-name}
 
-**Composite Score:** {X.X}/10
+**Consolidated Composite:** {X.X}/10
 **Trend:** {improving | stable | declining} {arrow}
 **Streak:** {N} day(s) at 7.0+
-**Prompts Analyzed:** {N} ({slash-count} slash commands not scored)
+**Projects Active:** {N}
+**Total Prompts:** {N} ({slash-count} slash commands not scored)
 **Rubric Source:** {source label}
 
 ---
 
-## Summary
+## Consolidated Summary
 
-{2-3 sentences. Be direct. Name specific strengths and problems.}
+{2-3 sentences covering the day overall across all projects.}
 
 ---
 
-## Dimension Scores
+## Consolidated Dimension Scores
 
 | Dimension | Score | Weight | Weighted |
 |---|---|---|---|
@@ -225,45 +232,51 @@ Use this template (fill ALL placeholders):
 | Automation awareness | {X.X} | 5% | {X.XX} |
 | **Composite** | | | **{X.X}** |
 
----
-
-## Top 3 Strengths
-
-1. {Strength with specific example}
-2. {Strength with specific example}
-3. {Strength with specific example}
+Consolidated scores are weighted averages across all projects, weighted by prompt count.
 
 ---
 
-## Top 3 Areas for Improvement
+## Per-Project Breakdown
 
-1. {Problem with specific example}
-2. {Problem with specific example}
-3. {Problem with specific example}
+{For each project active today:}
+
+### {project-name} ({N} prompts)
+
+**Project Composite:** {X.X}/10
+
+| Dimension | Score |
+|---|---|
+| Clarity | {X.X} |
+| ... | ... |
+
+**Strengths:** {top 2 for this project}
+**Weaknesses:** {top 2 for this project}
+
+**Highlights:**
+- Best: Prompt #{N} - "{preview}" (Score: {X.X})
+- Worst: Prompt #{N} - "{preview}" (Score: {X.X})
+  - Suggested rewrite: "{rewrite}"
 
 ---
 
-## Prompt-by-Prompt Highlights
+## Cross-Project Patterns
 
-### Excellent Examples
-
-{Prompts scoring >= 8.0 with "Why it worked" explanation}
-
-### Needs Work
-
-{Prompts scoring <= 4.0 with "Problem" and "Suggested rewrite"}
+{Compare dimension scores across projects. Examples:}
+- Context-giving is stronger in {project-a} ({X.X}) vs {project-b} ({X.X})
+- {project-c} has the most friction (Friction avoidance: {X.X})
+- {Observation about overall prompting style differences across projects}
 
 ---
 
 ## Classification Corrections
 
-{Table of corrections or "Pre-processor classifications accepted as-is."}
+{Table of corrections across all projects or "All accepted as-is."}
 
 ---
 
 ## Automation Candidates
 
-{List or "None identified today."}
+{List across all projects or "None identified today."}
 
 ---
 
@@ -288,7 +301,7 @@ Previous feedback check:
 
 ## Slash Command Analysis
 
-{Table or "No slash commands used today."}
+{Table across all projects or "No slash commands used today."}
 
 ---
 
@@ -301,7 +314,7 @@ Based on: {rubric source label}
 
 ### Step 4g: Write report.html
 
-Write to `~/prompt-analysis/{project}/reports/{DD-MM-YYYY}/report.html`.
+Write to `~/prompt-analysis/reports/{DD-MM-YYYY}/report.html`.
 
 **Requirements:**
 - Chart.js 4.x via CDN: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
@@ -314,7 +327,7 @@ Write to `~/prompt-analysis/{project}/reports/{DD-MM-YYYY}/report.html`.
 - Accent: `#818cf8`
 
 **Sections:**
-1. Header: project name, date, composite (large, color-coded), trend, streak
+1. Header: date, consolidated composite (large, color-coded), trend, streak, active project count
 2. Score gauge: doughnut chart
 3. Radar: 10 dimensions today vs yesterday
 4. Trend line: composite over time from scores.json
@@ -329,7 +342,7 @@ Inject real data as JSON in a `<script>` block.
 
 ### Step 4h: Update State Files
 
-Write all four to `~/prompt-analysis/{project}/reports/`:
+Write all four to `~/prompt-analysis/reports/` (unified, not per-project):
 
 **scores.json:** Append new daily score. Update streak, trend, rolling averages, milestones.
 
@@ -348,12 +361,13 @@ After all projects/days processed:
 ```
 === Prompt Analysis Complete ===
 
-{For each project analyzed:}
-Project: {name}
-  Days analyzed: {N}
-  Latest composite: {X.X}/10 ({trend})
-  Streak: {N} days
-  Reports: ~/prompt-analysis/{project}/reports/{date}/
+Dates analyzed: {N}
+Projects covered: {list}
+Consolidated composite: {X.X}/10 ({trend})
+Streak: {N} days at 7.0+
+7-day average: {X.X}
+
+Reports: ~/prompt-analysis/reports/{date}/
 
 Milestones earned today:
   {list or "None"}

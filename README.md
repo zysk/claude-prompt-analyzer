@@ -1,6 +1,6 @@
 # Claude Prompt Analyzer
 
-**Current version: 1.2.0**
+**Current version: 1.3.0**
 
 A self-improving prompt quality analysis system for Claude Code. Automatically captures your prompts and analyzes them to help you write better prompts every day.
 
@@ -71,22 +71,27 @@ All data is stored in your home directory under `~/prompt-analysis/`, organized 
 ```
 ~/prompt-analysis/
   projects.json               # Maps project names to their full paths
-  <project-name>/
-    prompts/                  # Raw captured data
+  <project-a>/
+    prompts/                  # Raw captured data (per project)
       DD-MM-YYYY/
-        prompts.md            # Captured prompts
-        metrics.json          # Pre-processed stats
-    reports/                  # Analysis output
+        prompts.md
+        metrics.json
+  <project-b>/
+    prompts/
       DD-MM-YYYY/
-        analysis.md           # LLM analysis
-        report.html           # Visual dashboard
-      scores.json             # Rolling scores + trends
-      meta.json               # Analysis state
-      corrections.json        # Classification feedback loop
-      learned-rules.json      # User-specific patterns
+        prompts.md
+        metrics.json
+  reports/                    # Unified analysis output (all projects)
+    DD-MM-YYYY/
+      analysis.md             # Consolidated report covering all projects
+      report.html             # Visual dashboard
+    scores.json               # Rolling scores
+    meta.json                 # Analysis state
+    corrections.json          # Classification feedback loop
+    learned-rules.json        # User-specific patterns
 ```
 
-Review all projects from one location. `/prompt-analyze` scans everything automatically.
+Prompts are captured per-project. Reports are unified; one report per date covering all active projects with per-project breakdowns and cross-project patterns.
 
 ## Updating
 
