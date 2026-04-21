@@ -107,9 +107,7 @@ function cleanupLegacy() {
   }
 
   // Write cleanup-done marker to prevent re-run on subsequent sessions
-  const pluginJson = PLUGIN_ROOT
-    ? readJsonSafe(path.join(PLUGIN_ROOT, '.claude-plugin', 'plugin.json'), {})
-    : {};
+  const pluginJson = readJsonSafe(path.join(PLUGIN_ROOT, '.claude-plugin', 'plugin.json'), {});
   fs.writeFileSync(
     cleanupMarker,
     JSON.stringify({
@@ -123,8 +121,11 @@ function cleanupLegacy() {
 
 // --- Version diff + migration (Path C) ---
 
-async function runVersionDiff(wasLegacy) {
-  if (!PLUGIN_DATA || !PLUGIN_ROOT) return;
+async function runVersionDiff(wasLegacy, priorVersion = null) {
+  if (!PLUGIN_DATA) {
+    process.stderr.write('[prompt-analyzer] session-init: CLAUDE_PLUGIN_DATA not set; skipping migration check.\n');
+    return;
+  }
 
   const pluginJson = readJsonSafe(path.join(PLUGIN_ROOT, '.claude-plugin', 'plugin.json'), {});
   const bundled = pluginJson.version;
@@ -135,17 +136,11 @@ async function runVersionDiff(wasLegacy) {
 
   if (bundled === stored) return; // already current; fast path
 
-  // Resolve fromVersion: stored value → legacy version file → null (unknown)
-  let fromVersion = stored || null;
-  if (!fromVersion) {
-    const legacyData = readJsonSafe(LEGACY_VERSION_FILE, null);
-    if (legacyData && legacyData.version) {
-      fromVersion = legacyData.version;
-    }
-  }
+  const fromVersion = stored || priorVersion;
+
+  let shouldPin = false;
 
   if (fromVersion && SUPPORTED_FROM_VERSIONS.has(fromVersion)) {
-    // v1.2.0 or v1.3.0: run full migration chain
     try {
       const { runMigrations } = require(
         path.join(PLUGIN_ROOT, 'scripts', 'migrations', 'index.js')
@@ -153,20 +148,24 @@ async function runVersionDiff(wasLegacy) {
       await runMigrations(PROMPT_ANALYSIS_ROOT, fromVersion, bundled, (msg) =>
         process.stderr.write(msg + '\n')
       );
+      shouldPin = true;
     } catch (err) {
       process.stderr.write(`[prompt-analyzer] Migration error: ${err.message}\n`);
     }
-  } else if (fromVersion || wasLegacy) {
-    // Unknown or unsupported prior version: preserve data, log, skip migration
-    const label = fromVersion || 'unknown';
-    process.stderr.write(
-      `[prompt-analyzer] Migration from v${label} not supported; ` +
-      `~/prompt-analysis/ data preserved. Run /prompt-analyzer:analyze to start fresh tracking.\n`
-    );
+  } else {
+    if (fromVersion || wasLegacy) {
+      const label = fromVersion || 'unknown';
+      process.stderr.write(
+        `[prompt-analyzer] Migration from v${label} not supported; ` +
+        `~/prompt-analysis/ data preserved. Run /prompt-analyzer:analyze to start fresh tracking.\n`
+      );
+    }
+    shouldPin = true;
   }
-  // Fresh install (no fromVersion, no wasLegacy): no migration needed; fall through to pin
 
-  fs.writeFileSync(storedPath, bundled, 'utf8');
+  if (shouldPin) {
+    fs.writeFileSync(storedPath, bundled, 'utf8');
+  }
 }
 
 // --- Entry point (must always exit 0) ---
@@ -174,10 +173,12 @@ async function runVersionDiff(wasLegacy) {
 async function main() {
   try {
     const isLegacy = detectLegacy();
+    const legacyVersionData = readJsonSafe(LEGACY_VERSION_FILE, null);
+    const priorVersion = (legacyVersionData && legacyVersionData.version) || null;
     if (isLegacy) {
       cleanupLegacy();
     }
-    await runVersionDiff(isLegacy);
+    await runVersionDiff(isLegacy, priorVersion);
     // Write plugin root path so skills can locate analyzer.js if CLAUDE_PLUGIN_ROOT is not exported as a shell env var
     try {
       fs.mkdirSync(PROMPT_ANALYSIS_ROOT, { recursive: true });
