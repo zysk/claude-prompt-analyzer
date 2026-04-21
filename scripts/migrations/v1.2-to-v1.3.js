@@ -30,10 +30,9 @@ async function migrate(root) {
   // If reports dir doesn't exist, nothing to merge
   if (!fs.existsSync(reportsDir)) {
     // Still delete projects.json if present
-    if (fs.existsSync(projectsJson)) {
-      fs.unlinkSync(projectsJson);
-    }
-    return { merged: false, deletedProjectsJson: fs.existsSync(projectsJson) };
+    const hadProjectsJson = fs.existsSync(projectsJson);
+    if (hadProjectsJson) { fs.unlinkSync(projectsJson); }
+    return { merged: false, deletedProjectsJson: hadProjectsJson };
   }
 
   const metaPath = path.join(reportsDir, 'meta.json');

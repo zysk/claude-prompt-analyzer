@@ -137,7 +137,7 @@ For each project active on this date, read:
 2. `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/metrics.json`
 
 Also read from the unified reports folder:
-3. `~/prompt-analysis/reports/scores.json` - historical scores
+3. `~/prompt-analysis/reports/state.json` — read `scores.dailyScores` for historical trend context
 4. **Previous analysis** (for progressive improvement tracking):
    - Read the MOST RECENT `analysis.md` from `~/prompt-analysis/reports/` (the latest date folder that has one)
    - Check if the user improved on the areas flagged in that report
@@ -339,7 +339,7 @@ Write to `~/prompt-analysis/reports/{DD-MM-YYYY}/report.html`.
 1. Header: date, consolidated composite (large, color-coded), trend, streak, active project count
 2. Score gauge: doughnut chart
 3. Radar: 10 dimensions today vs yesterday
-4. Trend line: composite over time from scores.json
+4. Trend line: composite over time from state.json scores.dailyScores
 5. Dimension bars: horizontal, color-coded
 6. Prompt highlights: expandable best/worst
 7. Milestones banner (if any)
