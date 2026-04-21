@@ -1,0 +1,28 @@
+{
+  "description": "Prompt capture and session initialization hooks",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/capture-prompts.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-init.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
