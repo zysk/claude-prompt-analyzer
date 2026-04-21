@@ -4,6 +4,8 @@
 
 A self-improving prompt quality analysis system for Claude Code. Automatically captures your prompts and analyzes them to help you write better prompts every day.
 
+> **Note:** This is the frozen `v1.2` release branch. For the latest version, see the `main` branch.
+
 ## Features
 
 - **Auto-capture**: Every prompt you type in Claude Code is logged to day-wise markdown files
