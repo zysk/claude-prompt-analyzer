@@ -18,21 +18,38 @@ A self-improving prompt quality analysis system for Claude Code. Automatically c
 - **Auto-migration**: Data migrates safely across versions; backup + rollback on failure
 - **Best practices anchored**: Quality standards fetched live from Anthropic docs at runtime (cached 15 days)
 
-## Quick Start
+## Installation
 
-```bash
-git clone <repo-url>
-cd claude-prompt-analyzer
-node scripts/deploy.js
+> **Note:** Exact install command depends on marketplace registration. The formats below reflect the Claude Code plugin system; verify the registered marketplace name before publishing docs.
+
+In Claude Code (once listed in a plugin marketplace):
+
+```
+/plugin install prompt-analyzer@<marketplace-name>
 ```
 
-That's it. Your prompts will be captured in every project you work on.
+Or for direct GitHub install (if supported):
+
+```
+/plugin install github:sahaarijit/claude-prompt-analyzer
+```
+
+Then start a new Claude Code session. The plugin configures itself automatically on first session start.
+
+> **Upgrading from v1.x?** The plugin automatically removes legacy files from `~/.claude/` on the first session after install. Your prompt history at `~/prompt-analysis/` is never deleted.
 
 ## Usage
 
-1. **Work normally** in Claude Code. Prompts are captured automatically.
-2. **Run `/prompt-analyze`** whenever you want feedback.
-3. **Review** `analysis.md` for detailed feedback or open `report.html` for visual dashboard.
+| Command | Description |
+|---------|-------------|
+| `/prompt-analyzer:analyze` | Analyze captured prompts; shows inline dashboard |
+| `/prompt-analyzer:view` | View latest report without re-running analysis |
+| `/prompt-analyzer:view trend` | Show 7-day composite score trend |
+| `/prompt-analyzer:view <DD-MM-YYYY>` | View report for a specific date |
+
+## Breaking Change (v1.x → v2.0)
+
+`/prompt-analyze` has been renamed to `/prompt-analyzer:analyze`.
 
 ## How It Works
 
@@ -49,19 +66,6 @@ Pre-Processor --> metrics.json (stats, classifications)
        |
        v
 LLM Analysis --> analysis.md + report.html + scores.json
-```
-
-## Project Structure
-
-```
-hooks/
-  capture-prompts.js        # Capture hook (UserPromptSubmit)
-skills/
-  prompt-analyze/
-    SKILL.md                # Analysis skill (/prompt-analyze)
-    analyzer.js             # Pre-processor (metrics computation)
-scripts/
-  deploy.js                 # One-command setup/uninstall
 ```
 
 ## Centralized Output
@@ -90,49 +94,3 @@ All data is stored in your home directory under `~/prompt-analysis/`, organized 
 
 Prompts are captured per-project. Reports are unified; one report per date covering all active projects with per-project breakdowns and cross-project patterns. Projects are auto-discovered via directory scan.
 
-## Updating
-
-When a new version is available, pull the latest changes and re-run the deploy script:
-
-```bash
-cd claude-prompt-analyzer
-git pull
-node scripts/deploy.js
-```
-
-The deploy script will show the version change (e.g., `Updating v1.2.0 -> v1.3.0`) and:
-1. Auto-backup your existing data at `~/prompt-analysis/.backup-{timestamp}/`
-2. Run all applicable migration scripts in order
-3. Delete the backup on success (or restore from it on failure)
-4. Overwrite deployed hook/skill files with new versions
-
-Your captured prompts are never lost.
-
-## Uninstall
-
-```bash
-node scripts/deploy.js --uninstall
-```
-
-Removes hook and skill files. Existing captures in `~/prompt-analysis/` are untouched.
-
-## Prerequisites
-
-Before running `deploy.js`, ensure the following are set up:
-
-1. **Node.js >= 16** - [Download](https://nodejs.org/)
-   ```bash
-   node --version   # must be v16+
-   ```
-
-2. **Git** with `user.name` configured
-   ```bash
-   git --version
-   git config --global user.name "Your Name"   # if not already set
-   ```
-
-3. **Claude Code** installed and initialized
-   - The `~/.claude/` directory must exist (created on first Claude Code run)
-   - Install: https://docs.anthropic.com/en/docs/claude-code
-
-The deploy script checks all three and will error or warn if anything is missing.
