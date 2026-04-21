@@ -4,10 +4,12 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
+const STATE_JSON = path.join(os.homedir(), 'prompt-analysis', 'reports', 'state.json');
 
 const BUILT_IN_COMMANDS = new Set([
   '/help', '/commit', '/review', '/insights', '/init', '/clear', '/compact',
@@ -409,28 +411,20 @@ function heuristicClassify(text, lowerText, prompt, prevPrompt, ruleAccuracy) {
  * Adjusts confidence using corrections.json accuracy data if present.
  *
  * @param {object[]} prompts
- * @param {string} correctionsPath - absolute path to corrections.json
- * @param {string} learnedRulesPath - absolute path to learned-rules.json
  * @returns {object[]}
  */
-function classifyPrompts(prompts, correctionsPath, learnedRulesPath) {
-  // Load optional self-improvement data
+function classifyPrompts(prompts) {
+  // Load optional self-improvement data from unified state.json
   let learnedRules = [];
-  if (learnedRulesPath && fs.existsSync(learnedRulesPath)) {
-    try {
-      learnedRules = JSON.parse(fs.readFileSync(learnedRulesPath, 'utf8'));
-    } catch (_e) {
-      // Malformed file — proceed without learned rules
-    }
-  }
-
   let ruleAccuracy = null;
-  if (correctionsPath && fs.existsSync(correctionsPath)) {
+
+  if (fs.existsSync(STATE_JSON)) {
     try {
-      const corrections = JSON.parse(fs.readFileSync(correctionsPath, 'utf8'));
-      ruleAccuracy = corrections.ruleAccuracy || null;
+      const state = JSON.parse(fs.readFileSync(STATE_JSON, 'utf8'));
+      learnedRules = (state.learnedRules && state.learnedRules.userPatterns) || [];
+      ruleAccuracy = (state.corrections && state.corrections.ruleAccuracy) || null;
     } catch (_e) {
-      // Malformed file — proceed without accuracy adjustments
+      // Malformed file — proceed without self-improvement data
     }
   }
 
@@ -614,25 +608,21 @@ function main() {
   const content = fs.readFileSync(promptsFile, 'utf8');
   const { prompts, sessions } = parsePromptsFile(content);
 
-  // Derive date and username from folder structure: .../username/dd-mm-yyyy
+  // Derive date and project from folder structure: .../{project}/prompts/{dd-mm-yyyy}
   const parts = dayFolder.replace(/\\/g, '/').split('/');
   const date = parts[parts.length - 1];
-  const username = parts[parts.length - 2];
-
-  const userFolder = path.dirname(dayFolder);
-  const correctionsPath = path.join(userFolder, 'corrections.json');
-  const learnedRulesPath = path.join(userFolder, 'learned-rules.json');
+  const project = parts[parts.length - 3] || '';
 
   const slashAnalysis = analyzeSlashCommands(prompts);
   const stats = computeStats(prompts);
-  const classifications = classifyPrompts(prompts, correctionsPath, learnedRulesPath);
+  const classifications = classifyPrompts(prompts);
   const patterns = detectPatterns(prompts);
   const timeDistribution = computeTimeDistribution(prompts);
   const sessionBreakdown = buildSessionBreakdown(prompts, sessions);
 
   const metrics = {
     date,
-    username,
+    project,
     sessionCount: sessions.length,
     promptCount: prompts.length,
     slashCommandCount: slashAnalysis.count,

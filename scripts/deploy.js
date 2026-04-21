@@ -13,12 +13,13 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
+const { runMigrations } = require('./migrations');
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 const HOOK_COMMAND = 'node ~/.claude/hooks/capture-prompts.js';
 const HOOK_ENTRY = {
@@ -30,6 +31,7 @@ const HOOK_ENTRY = {
 const HOME = os.homedir();
 const CLAUDE_DIR = path.join(HOME, '.claude');
 const VERSION_FILE = path.join(CLAUDE_DIR, 'prompt-analyzer-version.json');
+const PROMPT_ANALYSIS_ROOT = path.join(HOME, 'prompt-analysis');
 
 // Source paths (relative to repo root, resolved at runtime)
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -106,6 +108,42 @@ function checkVersion() {
     print(`  Already at v${VERSION} (deployed ${deployed.deployedAt}). Re-deploying files.`);
   } else {
     print(`  Updating v${deployed.version} -> v${VERSION}`);
+  }
+}
+
+async function runDataMigrations() {
+  const deployed = getDeployedVersion();
+  const fromVersion = deployed ? deployed.version : '1.0.0';
+
+  if (!fs.existsSync(PROMPT_ANALYSIS_ROOT)) {
+    // First-time user; no data to migrate
+    return;
+  }
+
+  if (fromVersion === VERSION) {
+    // Already at target version
+    return;
+  }
+
+  section(`Migrating data v${fromVersion} -> v${VERSION}...`);
+
+  try {
+    const result = await runMigrations(
+      PROMPT_ANALYSIS_ROOT,
+      fromVersion,
+      VERSION,
+      (msg) => print(`  ${msg}`),
+    );
+    if (result.ran) {
+      ok(`Data migration complete (${result.chain.length} step(s))`);
+    } else if (result.reason === 'already-current') {
+      ok('Data already at target schema');
+    } else if (result.reason === 'no-data') {
+      ok('No existing data to migrate');
+    }
+  } catch (err) {
+    print('');
+    fail(`Data migration failed: ${err.message}\n  Deploy aborted. Your data was restored from backup.`);
   }
 }
 
@@ -391,18 +429,28 @@ function uninstall() {
 // Entry point
 // ---------------------------------------------------------------------------
 
-const args = process.argv.slice(2);
-const isUninstall = args.includes('--uninstall');
+async function main() {
+  const args = process.argv.slice(2);
+  const isUninstall = args.includes('--uninstall');
 
-if (isUninstall) {
-  uninstall();
-} else {
+  if (isUninstall) {
+    uninstall();
+    return;
+  }
+
   banner('Prompt Analyzer for Claude Code');
   checkVersion();
   checkPrerequisites();
+  await runDataMigrations();
   copyFiles();
   updateSettings();
   verifyInstall();
   writeVersion();
   printSuccess();
 }
+
+main().catch((err) => {
+  print('');
+  print(`  [FAIL] ${err.message}`);
+  process.exit(1);
+});

@@ -17,22 +17,35 @@ Work through Steps 1-5 in order. Be precise. Do not skip steps. Do not fabricate
 
 ## Step 1: Fetch Best Practices Rubric
 
-Obtain the scoring rubric from the best available source. Try each tier in order; stop at the first that succeeds.
+Obtain the scoring rubric from the best available source. Always try live sources first; the hardcoded baseline is a last-resort offline fallback.
 
-**Tier 1 - Context7 (preferred):**
-1. Call `mcp__context7__resolve-library-id` with query `"anthropic claude prompting"`.
-2. Call `mcp__context7__query-docs` with the resolved library ID, querying for `"prompt engineering best practices clarity specificity context"`.
-3. If either call errors or returns no usable content, fall through to Tier 2.
-4. Source label: `"Context7 - Anthropic Claude Prompting Guide"`
+**Tier 1 - WebSearch + WebFetch (preferred; always attempt):**
+1. Use `WebSearch` tool with query: `"Anthropic Claude prompt engineering best practices"`
+2. Identify the most authoritative official URL (e.g., `docs.anthropic.com/.../prompt-engineering/...`)
+3. Use `WebFetch` tool to fetch the content of that URL
+4. If both steps succeed: use fetched rubric; also cache it (see Tier 2)
+5. Source label: `"WebFetch - {url} ({date})"`
 
-**Tier 2 - WebFetch fallback:**
-1. Fetch `https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview` using the available fetch tool.
-2. If the fetch fails or returns an error page, fall through to Tier 3.
-3. Source label: `"WebFetch - docs.anthropic.com/prompt-engineering"`
+**Cache the result:**
+On successful fetch, write cache file at `~/prompt-analysis/reports/rubric-cache.json`:
+```json
+{
+  "source": "WebFetch - {url}",
+  "fetchedAt": "{ISO timestamp}",
+  "content": "{full fetched rubric text}"
+}
+```
+
+**Tier 2 - Rubric cache (if live fetch fails):**
+1. Read `~/prompt-analysis/reports/rubric-cache.json` if it exists
+2. If `fetchedAt` is within last 15 days, use cached content
+3. Source label: `"Cache - {original url} (cached {fetchedAt})"`
+4. If cache is older than 15 days or missing, fall through to Tier 3
 
 **Tier 3 - Baseline Rubric (last resort):**
-Use the Baseline Rubric defined at the bottom of this file.
+Use the Baseline Rubric at the bottom of this file.
 Source label: `"Baseline Rubric (offline fallback)"`
+Print a notice: "Using baseline rubric; re-run online for latest standards."
 
 ---
 
@@ -40,65 +53,59 @@ Source label: `"Baseline Rubric (offline fallback)"`
 
 **This skill does NOT depend on the current working directory.** All data lives at `~/prompt-analysis/`.
 
-**2a. Read projects.json:**
+**2a. Discover projects via directory scan:**
 
-Read the file at `~/prompt-analysis/projects.json` using the Read tool. This file maps project names to their source paths. Example:
-```json
-{
-  "claude-prompt-analyzer": "C:/Users/ArijitSaha/Projects/office/my-stuff/claude-prompt-analyzer",
-  "coderepo-react-node-melodio": "C:/Users/ArijitSaha/Projects/office/zysk-projects/hackerrank/coderepo/melodio/coderepo-react-node-melodio"
-}
-```
+List subdirectories of `~/prompt-analysis/` using the `Glob` tool with pattern `~/prompt-analysis/*/`:
+- Any directory name is a project name
+- EXCEPT: skip `reports` (unified reports folder) and anything starting with `.` (hidden dirs like `.backup-*`)
+- A project is "active" if `~/prompt-analysis/{project}/prompts/` exists
 
-If the file doesn't exist or is empty, print: "No prompts captured yet. Use Claude Code in any project; prompts are captured automatically." Then exit.
+If no projects found: print "No prompts captured yet. Use Claude Code in any project; prompts are captured automatically." Then exit.
 
-**2b. Collect all dates with prompts across ALL projects:**
+**2b. Collect dates with prompts across ALL projects:**
 
-For each project in `projects.json`:
+For each discovered project:
 1. List day folders at `~/prompt-analysis/{project}/prompts/` matching `DD-MM-YYYY`
 2. For each day folder: check if `prompts.md` exists
-3. Build a map: `{ "DD-MM-YYYY": ["project-a", "project-b", ...] }` of dates to projects with prompts
+3. Build map: `{ "DD-MM-YYYY": ["project-a", "project-b", ...] }`
 
-**2c. Check which dates are already analyzed:**
+**2c. Find unanalyzed dates:**
 
 A date is **analyzed** if `~/prompt-analysis/reports/{DD-MM-YYYY}/analysis.md` exists.
-Reports are in ONE unified folder at `~/prompt-analysis/reports/`, NOT per-project.
 
 A date is **unanalyzed** if it has prompts in any project but no `analysis.md` in the unified reports folder.
 
-**2d. Read state files:**
+**2d. Read unified state:**
 
-Read these files from `~/prompt-analysis/reports/` if they exist:
-- `meta.json`
-- `scores.json`
-- `corrections.json`
-- `learned-rules.json`
+Read `~/prompt-analysis/reports/state.json` if it exists. Structure:
+```json
+{
+  "schemaVersion": "1.3.0",
+  "meta": { ... },
+  "scores": { ... },
+  "corrections": { ... },
+  "learnedRules": { ... }
+}
+```
 
-If any file is missing, treat as empty/default.
+If file missing, treat each section as empty/default. You will write it back in Step 4h.
 
 **2e. Print summary:**
 
 ```
 Prompt Analysis Scan
 ====================
-Projects registered: {N}
+Projects found: {N}
 Dates with prompts: {M}
 Unanalyzed dates: {K}
 
 {DD-MM-YYYY}: {project-a} ({N} prompts), {project-b} ({N} prompts)
 {DD-MM-YYYY}: {project-c} ({N} prompts)
-...
 
 Analyzing oldest first.
 ```
 
 If no unanalyzed dates: "All days analyzed. Latest composite: {X.X}/10." Then exit.
-
----
-
-## Step 3: (merged into Step 2)
-
-Step 3 is now part of Step 2. Proceed to Step 4.
 
 ---
 
@@ -340,17 +347,53 @@ Inject real data as JSON in a `<script>` block.
 
 ---
 
-### Step 4h: Update State Files
+### Step 4h: Update Unified state.json
 
-Write all four to `~/prompt-analysis/reports/` (unified, not per-project):
+Write to `~/prompt-analysis/reports/state.json`. Single file; four top-level sections.
 
-**scores.json:** Append new daily score. Update streak, trend, rolling averages, milestones.
+Structure:
+```json
+{
+  "schemaVersion": "1.3.0",
+  "meta": {
+    "lastAnalyzedDate": "DD-MM-YYYY",
+    "totalDaysAnalyzed": N,
+    "firstCaptureDate": "DD-MM-YYYY",
+    "analysisHistory": ["..."],
+    "rubricSource": "{source label}",
+    "rubricFetchDate": "DD-MM-YYYY"
+  },
+  "scores": {
+    "currentStreak": N,
+    "bestStreak": N,
+    "totalDaysAnalyzed": N,
+    "latestCompositeScore": X.X,
+    "trend": "improving | stable | declining",
+    "dailyScores": [...],
+    "rollingAverage": { "7day": X.X, "15day": X.X, "30day": X.X | null },
+    "milestones": [...]
+  },
+  "corrections": {
+    "scope": "CLASSIFICATION ONLY",
+    "maxEntries": 200,
+    "corrections": [...],
+    "ruleAccuracy": {...}
+  },
+  "learnedRules": {
+    "scope": "CLASSIFICATION ONLY - never quality judgment",
+    "stalePruneAfterDays": 30,
+    "userPatterns": [...]
+  }
+}
+```
 
-**corrections.json:** Append corrections from 4d. FIFO at 200 entries. Recompute ruleAccuracy.
+**Update rules:**
+- **meta**: update lastAnalyzedDate, totalDaysAnalyzed, append to analysisHistory, update rubricSource/rubricFetchDate
+- **scores**: append new daily score; update streak, trend, rolling averages, milestones
+- **corrections**: append from Step 4d; FIFO cap at 200 entries; recompute ruleAccuracy
+- **learnedRules**: add patterns appearing 3+ times; prune userPatterns with lastTriggered older than 30 days
 
-**learned-rules.json:** Add patterns from corrections appearing 3+ times. Prune stale (30 days). Scope: CLASSIFICATION ONLY.
-
-**meta.json:** Update lastAnalyzedDate, totalDaysAnalyzed, analysisHistory, rubricSource/Date.
+Read existing state.json first; merge your updates; write back with 2-space indentation.
 
 ---
 
@@ -373,11 +416,19 @@ Milestones earned today:
   {list or "None"}
 ```
 
-Open the latest report.html in browser:
+Open the latest report.html in browser. First detect platform:
+
 ```bash
-node -e "const p=process.platform;const cmd=p==='win32'?'start \"\"':p==='darwin'?'open':'xdg-open';require('child_process').execSync(cmd+' \"PATH\"')"
+node -e "console.log(process.platform)"
 ```
-Replace `PATH` with the actual absolute path to the latest report.html.
+
+Then run the appropriate Bash command based on output:
+
+- **Windows** (`win32`): `start "" "REPORT_PATH"`
+- **macOS** (`darwin`): `open "REPORT_PATH"`
+- **Linux** (`linux`): `xdg-open "REPORT_PATH"`
+
+Replace `REPORT_PATH` with the absolute path to the latest `report.html`.
 
 ---
 

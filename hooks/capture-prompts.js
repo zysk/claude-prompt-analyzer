@@ -8,9 +8,8 @@ const os = require('os');
 
 // --- Config ---
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 const PROMPT_ANALYSIS_ROOT = path.join(os.homedir(), 'prompt-analysis');
-const PROJECTS_FILE = path.join(PROMPT_ANALYSIS_ROOT, 'projects.json');
 
 // --- Helpers ---
 
@@ -50,24 +49,17 @@ function getLastSessionId(content) {
   return idMatch ? idMatch[1] : null;
 }
 
+/**
+ * Derive project name from the Claude Code session root, not the current cwd.
+ *
+ * CLAUDE_PROJECT_DIR is set by Claude Code to the directory where the session
+ * was started. If the user cd's into a subfolder mid-session, cwd changes but
+ * CLAUDE_PROJECT_DIR stays stable. Falls back to cwd if env var is missing.
+ */
 function getProjectName(cwd) {
-  const normalizedCwd = cwd.replace(/\\/g, '/').replace(/\/+$/, '');
-  const baseName = path.basename(normalizedCwd);
-
-  // Read or create projects.json (last-write-wins; same name = same project)
-  let projects = {};
-  if (fs.existsSync(PROJECTS_FILE)) {
-    try {
-      projects = JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf8'));
-    } catch { /* ignore parse errors */ }
-  }
-
-  // Always map baseName to this cwd (overwrites if different path)
-  projects[baseName] = normalizedCwd;
-  fs.mkdirSync(PROMPT_ANALYSIS_ROOT, { recursive: true });
-  fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf8');
-
-  return baseName;
+  const projectRoot = process.env.CLAUDE_PROJECT_DIR || cwd;
+  const normalized = projectRoot.replace(/\\/g, '/').replace(/\/+$/, '');
+  return path.basename(normalized);
 }
 
 // --- Main ---

@@ -1,6 +1,6 @@
 # Claude Prompt Analyzer
 
-**Current version: 1.2.0**
+**Current version: 1.3.0**
 
 A self-improving prompt quality analysis system for Claude Code. Automatically captures your prompts and analyzes them to help you write better prompts every day.
 
@@ -15,7 +15,8 @@ A self-improving prompt quality analysis system for Claude Code. Automatically c
 - **Run from anywhere**: `/prompt-analyze` works from any directory; scans all projects
 - **Progressive reports**: Each report builds on the last; tracks whether you acted on feedback
 - **Version-aware**: Deploy script detects and shows version changes on update
-- **Best practices anchored**: Quality standards fetched from latest Anthropic docs at runtime
+- **Auto-migration**: Data migrates safely across versions; backup + rollback on failure
+- **Best practices anchored**: Quality standards fetched live from Anthropic docs at runtime (cached 15 days)
 
 ## Quick Start
 
@@ -69,7 +70,6 @@ All data is stored in your home directory under `~/prompt-analysis/`, organized 
 
 ```
 ~/prompt-analysis/
-  projects.json               # Maps project names to their full paths
   <project-a>/
     prompts/                  # Raw captured data (per project)
       DD-MM-YYYY/
@@ -84,13 +84,11 @@ All data is stored in your home directory under `~/prompt-analysis/`, organized 
     DD-MM-YYYY/
       analysis.md             # Consolidated report covering all projects
       report.html             # Visual dashboard
-    scores.json               # Rolling scores
-    meta.json                 # Analysis state
-    corrections.json          # Classification feedback loop
-    learned-rules.json        # User-specific patterns
+    state.json                # Unified state: meta, scores, corrections, learnedRules
+    rubric-cache.json         # Cached prompting rubric (15-day TTL)
 ```
 
-Prompts are captured per-project. Reports are unified; one report per date covering all active projects with per-project breakdowns and cross-project patterns.
+Prompts are captured per-project. Reports are unified; one report per date covering all active projects with per-project breakdowns and cross-project patterns. Projects are auto-discovered via directory scan.
 
 ## Updating
 
@@ -102,7 +100,13 @@ git pull
 node scripts/deploy.js
 ```
 
-The deploy script will show the version change (e.g., `Updating v1.0.0 -> v1.1.0`) and overwrite deployed files. Existing captured data is never touched.
+The deploy script will show the version change (e.g., `Updating v1.2.0 -> v1.3.0`) and:
+1. Auto-backup your existing data at `~/prompt-analysis/.backup-{timestamp}/`
+2. Run all applicable migration scripts in order
+3. Delete the backup on success (or restore from it on failure)
+4. Overwrite deployed hook/skill files with new versions
+
+Your captured prompts are never lost.
 
 ## Uninstall
 
