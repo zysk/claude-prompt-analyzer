@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A Claude Code plugin that makes you measurably better at prompting — automatically.</strong>
+  <strong>A Claude Code plugin that makes you measurably better at prompting.</strong>
 </p>
 
 <p align="center">
@@ -22,47 +22,16 @@
 
 ## Features
 
-Every feature is designed around one goal: **you should get better at prompting over time, with zero manual effort.**
-
-**1. Every prompt you write is automatically tracked**
-No opt-in, no setup per project. The moment you install the plugin, every prompt you type in Claude Code is silently logged.
-> You finish a session and `/prompt-analyzer:analyze` already has 22 prompts to work with — across 3 projects.
-
-**2. Deep quality feedback across 10 dimensions**
-Clarity, specificity, context-giving, actionability, scope control, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness.
-> *"Specificity: 3.2/10 — your prompt `fix the bug` gives Claude nothing to go on. Try describing the symptom, the file, and the expected behavior."*
-
-**3. Scores that compound over time**
-Each report references the last. You see not just today's score but whether you acted on last week's feedback.
-> *"Week 3 streak — composite up 1.1 points since Monday. You've nearly eliminated single-word prompts."*
-
-**4. Inline dashboard — no browser required**
-Score summary, dimension breakdown, trend sparklines, and prompt highlights render directly inside your Claude Code session.
-> No opening a separate file. No waiting for a build. Everything in the chat window.
-
-**5. One report across all your projects**
-Working across 3 repos today? One `/prompt-analyzer:analyze` covers all of them — unified, with per-project breakdowns and cross-project patterns.
-> *"You're more specific in `frontend` than `backend`. Your weakest project for context-giving: `infra-scripts`."*
-
-**6. Detects your recurring patterns**
-The system learns your prompt habits session over session. Recurring weaknesses get flagged until you fix them.
-> *"You've sent 18 vague prompts this week. Pattern: starting tasks with a single verb — `refactor`, `test`, `document` — with no scope."*
-
-**7. One install, self-configuring**
-Two commands to install. The plugin configures itself on first session start — hooks, storage, everything.
-> Start capturing from your next prompt forward. No YAML, no config files, nothing to edit.
-
-**8. Your data is safe across version updates**
-When a new version ships, your entire prompt history is automatically migrated. Backup is taken before migration; if anything fails, it rolls back — your history is never lost.
-> Upgrade whenever you want. Zero data loss, zero manual steps.
-
-**9. Stays private — never touches your repos**
-All data lives in `~/prompt-analysis/` on your machine. It never enters any project directory, never gets committed, never leaves your device.
-> Your prompts are yours.
-
-**10. Quality standards sourced from Anthropic's own docs**
-The scoring rubric is fetched from official Anthropic prompting guidelines at runtime — not hardcoded opinions — and refreshed every 15 days.
-> Your scores are grounded in what Anthropic actually recommends, not someone's personal checklist.
+- **Auto-capture** — Every prompt you type is silently logged. No setup, no opt-in per project.
+- **10-dimension scoring** — Clarity, specificity, context-giving, actionability, scope, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness.
+- **Day-over-day progress** — Composite scores, streaks, and milestones tracked automatically.
+- **Inline dashboard** — Score summary, dimension breakdown, and sparklines in the chat window. No browser needed.
+- **Cross-project coverage** — One command covers all active projects with per-project breakdowns.
+- **Pattern detection** — Recurring weaknesses flagged every session until they improve.
+- **Zero-friction install** — Two commands. Self-configures on first session start.
+- **Safe upgrades** — Data auto-migrated on version updates. Backup taken before; rollback on failure.
+- **Private by default** — All data in `~/prompt-analysis/` on your machine. Never enters your repos.
+- **Anchored to Anthropic's docs** — Scoring rubric sourced from official prompting guidelines; refreshed every 15 days.
 
 ---
 
@@ -187,13 +156,3 @@ flowchart TD
     rubric-cache.json     ← cached Anthropic rubric (15-day TTL)
 ```
 
----
-
-<p align="center">
-  <img src="assets/claude-jumping.svg" alt="divider" width="60" height="50">
-</p>
-
-## Credits
-
-- Jumping Claude mascot from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) — a great reference for Claude Code patterns and conventions.
-- Built with zero npm dependencies. Pure Node.js standard library.
