@@ -1,7 +1,6 @@
 # Changelog
 
 All notable changes to Claude Prompt Analyzer are documented here.
-Format inspired by [VS Code release notes](https://code.visualstudio.com/updates).
 
 ---
 
