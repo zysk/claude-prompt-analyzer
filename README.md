@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A Claude Code tool that makes you measurably better at prompting — automatically.</strong>
+  <strong>A Claude Code tool that makes you measurably better at prompting.</strong>
 </p>
 
 <p align="center">
