@@ -22,16 +22,16 @@
 
 ## Features
 
-- **Auto-capture** — Every prompt you type is silently logged. No setup, no opt-in per project.
-- **10-dimension scoring** — Clarity, specificity, context-giving, actionability, scope, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness.
-- **Day-over-day progress** — Composite scores, streaks, and milestones tracked automatically.
-- **Inline dashboard** — Score summary, dimension breakdown, and sparklines in the chat window. No browser needed.
-- **Cross-project coverage** — One command covers all active projects with per-project breakdowns.
-- **Pattern detection** — Recurring weaknesses flagged every session until they improve.
-- **Zero-friction install** — Two commands. Self-configures on first session start.
-- **Safe upgrades** — Data auto-migrated on version updates. Backup taken before; rollback on failure.
-- **Private by default** — All data in `~/prompt-analysis/` on your machine. Never enters your repos.
-- **Anchored to Anthropic's docs** — Scoring rubric sourced from official prompting guidelines; refreshed every 15 days.
+- **Auto-capture** - Every prompt you type is silently logged. No setup, no opt-in per project.
+- **10-dimension scoring** - Clarity, specificity, context-giving, actionability, scope, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness.
+- **Day-over-day progress** - Composite scores, streaks, and milestones tracked automatically.
+- **Inline dashboard** - Score summary, dimension breakdown, and sparklines in the chat window. No browser needed.
+- **Cross-project coverage** - One command covers all active projects with per-project breakdowns.
+- **Pattern detection** - Recurring weaknesses flagged every session until they improve.
+- **Zero-friction install** - Two commands. Self-configures on first session start.
+- **Safe upgrades** - Data auto-migrated on version updates. Backup taken before; rollback on failure.
+- **Private by default** - All data in `~/prompt-analysis/` on your machine. Never enters your repos.
+- **Anchored to Anthropic's docs** - Scoring rubric sourced from official prompting guidelines; refreshed every 15 days.
 
 ---
 
@@ -55,7 +55,7 @@ Run these two commands inside Claude Code:
 /plugin install prompt-analyzer@sahaarijit-claude-prompt-analyzer
 ```
 
-Then **restart Claude Code**. The plugin configures itself on the first new session — no further steps.
+Then **restart Claude Code**. The plugin configures itself on the first new session - no further steps.
 
 ### Upgrade from v1.x
 
@@ -103,7 +103,7 @@ Dimensions
   Friction avoid  ███████░░░  7.2     Automation aw.  █████░░░░░  5.9
 
 ↑ Top improvement this week: context-giving (+1.4 pts)
-⚠ Recurring gap: vague prompts — 4 today, 19 this week. Add scope + expected outcome.
+⚠ Recurring gap: vague prompts - 4 today, 19 this week. Add scope + expected outcome.
 
 Top prompt today (9.1/10):  "Refactor the auth middleware to use..."
 Weakest today   (2.8/10):   "fix it"
