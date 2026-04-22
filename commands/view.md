@@ -1,19 +1,15 @@
 ---
-name: view
-description: >
-  Reopen an existing prompt analysis report without re-running analysis.
-  Zero LLM cost. Supports: latest, today, yesterday, DD-MM-YYYY, and trend.
-  Use when user runs /prompt-analyzer:view.
+description: "Reopen an existing prompt analysis report. Zero LLM cost. Supports: latest, today, yesterday, DD-MM-YYYY, and trend."
 ---
 
-Reopen an existing analysis report. Do NOT re-run analysis. Do NOT write to state.json or any data file. This skill is strictly read-only.
+Reopen an existing analysis report. Do NOT re-run analysis. Do NOT write to state.json or any data file. This command is strictly read-only.
 
 **Invocations:**
-- `/prompt-analyzer:view` — most recent date in `~/prompt-analysis/reports/`
-- `/prompt-analyzer:view today` — today in DD-MM-YYYY
-- `/prompt-analyzer:view yesterday` — yesterday in DD-MM-YYYY
-- `/prompt-analyzer:view <DD-MM-YYYY>` — explicit date, e.g., `21-04-2026`
-- `/prompt-analyzer:view trend` — 7-day composite history inline; no file link
+- `/prompt-analyzer:view` - most recent date in `~/prompt-analysis/reports/`
+- `/prompt-analyzer:view today` - today in DD-MM-YYYY
+- `/prompt-analyzer:view yesterday` - yesterday in DD-MM-YYYY
+- `/prompt-analyzer:view <DD-MM-YYYY>` - explicit date, e.g., `21-04-2026`
+- `/prompt-analyzer:view trend` - 7-day composite history inline; no file link
 
 ---
 
@@ -65,9 +61,9 @@ console.log(target || 'NONE');
 
 ## Step 2: Trend view (only when argument is "trend")
 
-Read `~/prompt-analysis/reports/state.json`. Extract `scores.dailyScores` — last 7 entries sorted ascending.
+Read `~/prompt-analysis/reports/state.json`. Extract `scores.dailyScores` - last 7 entries sorted ascending.
 
-For each entry, build a 5-score trailing sparkline using the last 5 scores up to that entry; left-pad with `▁` if fewer than 5 available. Map each score with `Math.round((S / 10) * 7)` → index into `['▁','▂','▃','▄','▅','▆','▇','█']`.
+For each entry, build a 5-score trailing sparkline using the last 5 scores up to that entry; left-pad with `▁` if fewer than 5 available. Map each score with `Math.round((S / 10) * 7)` -> index into `['▁','▂','▃','▄','▅','▆','▇','█']`.
 
 Print:
 ```
@@ -81,7 +77,7 @@ Print:
 7-day average: X.X/10
 ```
 
-Then stop — do not proceed to Steps 3–4.
+Then stop - do not proceed to Steps 3-4.
 
 ---
 
@@ -129,7 +125,7 @@ Read `~/prompt-analysis/reports/state.json` to get `scores.dailyScores` for spar
 Emit the same inline dashboard as `/prompt-analyzer:analyze` Step 5b using data from analysis.md:
 
 ```
-### 📊 Prompt Analysis — <targetDate>
+### 📊 Prompt Analysis - <targetDate>
 
 **Composite score**: <composite>/10  <trend-arrow><delta as +0.0 or -0.0>  (<streak>-day streak at 7.0+)
 
@@ -152,7 +148,7 @@ Emit the same inline dashboard as `/prompt-analyzer:analyze` Step 5b using data 
 Full report: `file:///<absolute path to ~/prompt-analysis/reports/<targetDate>/report.html>`
 ```
 
-Sparkline + arrow rules: same as analyze Step 5a — `Math.round((S/10)*7)` → `['▁','▂','▃','▄','▅','▆','▇','█']`; arrow thresholds ±0.5.
+Sparkline + arrow rules: same as analyze Step 5a - `Math.round((S/10)*7)` -> `['▁','▂','▃','▄','▅','▆','▇','█']`; arrow thresholds ±0.5.
 
 If `htmlExists` was false (Step 3), omit the `Full report:` line and print instead:
 `(HTML report missing; run /prompt-analyzer:analyze to regenerate)`

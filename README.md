@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-blue" alt="v2.0.0">
+  <img src="https://img.shields.io/badge/version-2.0.1-blue" alt="v2.0.1">
   <img src="https://img.shields.io/badge/platform-Claude%20Code-orange" alt="Claude Code">
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="zero dependencies">
 </p>
@@ -45,7 +45,7 @@
 
 ### Install
 
-Run these two commands inside Claude Code:
+Run these three commands inside Claude Code:
 
 ```
 /plugin marketplace add sahaarijit/claude-prompt-analyzer#main
@@ -55,23 +55,27 @@ Run these two commands inside Claude Code:
 /plugin install prompt-analyzer@prompt-analyzer-marketplace
 ```
 
-Then **restart Claude Code**. The plugin configures itself on the first new session - no further steps.
+```
+/reload-plugins
+```
 
-### Upgrade from v1.x
+The plugin configures itself on the first new session - no further steps. A full **Claude Code restart** gives the cleanest first-run experience but is optional once `/reload-plugins` has run.
 
-Run the same two install commands above. Your existing prompt history at `~/prompt-analysis/` is preserved and automatically migrated to the new format. Legacy files from the old manual install (in `~/.claude/`) are cleaned up automatically on first session.
+### Upgrade from v1.x or v2.0.0
+
+Run the same three commands above. Your existing data at `~/prompt-analysis/` is preserved and automatically migrated to the latest schema. Legacy files from the old manual install (in `~/.claude/`) are cleaned up automatically on first session.
 
 > You do **not** need to manually delete anything.
 
 ### Uninstall
 
-Check which scope you installed with:
+Check which scope the plugin is installed under:
 
 ```
 /plugin
 ```
 
-Then use the matching uninstall command.
+Then run the matching uninstall command.
 
 **User-level install:**
 
@@ -85,11 +89,12 @@ Then use the matching uninstall command.
 /plugin uninstall prompt-analyzer@prompt-analyzer-marketplace
 ```
 
-If neither works, clean up manually:
+If neither command succeeds (most often because the identifier or scope does not match the registry), clean up manually:
 
 1. Delete the cache: `rm -rf ~/.claude/plugins/cache/prompt-analyzer-marketplace`
-2. Remove the entry from `~/.claude/plugins/installed_plugins.json` (key: `prompt-analyzer@prompt-analyzer-marketplace`)
+2. Remove the entry keyed `prompt-analyzer@prompt-analyzer-marketplace` from `~/.claude/plugins/installed_plugins.json`
 3. Remove `"prompt-analyzer@prompt-analyzer-marketplace": true` from `enabledPlugins` in `~/.claude/settings.json`
+4. (Optional) Remove the `prompt-analyzer-marketplace` entry from `extraKnownMarketplaces` in `~/.claude/settings.json` and from `~/.claude/plugins/known_marketplaces.json`, plus the cached marketplace folder at `~/.claude/plugins/marketplaces/prompt-analyzer-marketplace/`
 
 > Your data at `~/prompt-analysis/` is **not** deleted. Remove that folder manually if you want a clean slate.
 

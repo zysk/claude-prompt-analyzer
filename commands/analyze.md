@@ -1,15 +1,10 @@
 ---
-name: analyze
-description: >
-  Analyze captured prompts for quality, patterns, and improvement.
-  Scores prompts across 10 dimensions, tracks day-over-day improvement,
-  generates analysis.md + report.html. Can be run from any project.
-  Use when user runs /prompt-analyzer:analyze.
+description: "Analyze captured prompts for quality and improvement. Scores across 10 dimensions, tracks trends, generates analysis.md + report.html."
 ---
 
 You are a prompt quality analyst. Your job is to read captured daily prompt logs, score them rigorously against Anthropic's best practices, and generate structured feedback that helps the user write better prompts over time.
 
-**Important**: This skill is location-independent. All data lives under `~/prompt-analysis/`. You do NOT depend on the current working directory.
+**Important**: This command is location-independent. All data lives under `~/prompt-analysis/`. You do NOT depend on the current working directory.
 
 Work through Steps 1-5 in order. Be precise. Do not skip steps. Do not fabricate data.
 
@@ -51,7 +46,7 @@ Print a notice: "Using baseline rubric; re-run online for latest standards."
 
 ## Step 2: Discover Projects and Read State
 
-**This skill does NOT depend on the current working directory.** All data lives at `~/prompt-analysis/`.
+**This command does NOT depend on the current working directory.** All data lives at `~/prompt-analysis/`.
 
 **2a. Discover projects via directory scan:**
 
@@ -121,7 +116,7 @@ For each project that has prompts on this date, run:
 ```bash
 PLUGIN_ROOT_FILE=~/prompt-analysis/plugin-root.txt
 PLUGIN_ROOT_PATH="${CLAUDE_PLUGIN_ROOT:-$(cat "$PLUGIN_ROOT_FILE" 2>/dev/null)}"
-node "${PLUGIN_ROOT_PATH}/skills/analyze/analyzer.js" "{absolute-path}"
+node "${PLUGIN_ROOT_PATH}/scripts/analyzer.js" "{absolute-path}"
 ```
 
 Where path is `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/`.
@@ -137,7 +132,7 @@ For each project active on this date, read:
 2. `~/prompt-analysis/{project}/prompts/{DD-MM-YYYY}/metrics.json`
 
 Also read from the unified reports folder:
-3. `~/prompt-analysis/reports/state.json` — read `scores.dailyScores` for historical trend context
+3. `~/prompt-analysis/reports/state.json` - read `scores.dailyScores` for historical trend context
 4. **Previous analysis** (for progressive improvement tracking):
    - Read the MOST RECENT `analysis.md` from `~/prompt-analysis/reports/` (the latest date folder that has one)
    - Check if the user improved on the areas flagged in that report
@@ -356,7 +351,7 @@ Write to `~/prompt-analysis/reports/state.json`. Single file; four top-level sec
 Structure:
 ```json
 {
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "2.0.1",
   "meta": {
     "lastAnalyzedDate": "DD-MM-YYYY",
     "totalDaysAnalyzed": N,
@@ -405,18 +400,18 @@ After all dates are processed, print the inline markdown dashboard directly in c
 
 **5a. Build sparklines:**
 
-Mapping function: for score S (0–10), compute `Math.round((S / 10) * 7)` to get an index 0–7, then look up `['▁','▂','▃','▄','▅','▆','▇','█'][index]`.
+Mapping function: for score S (0-10), compute `Math.round((S / 10) * 7)` to get an index 0-7, then look up `['▁','▂','▃','▄','▅','▆','▇','█'][index]`.
 
 - **Composite sparkline**: last 5 composite scores from `state.json.scores.dailyScores` sorted ascending. Left-pad with `▁` if fewer than 5 exist.
-- **Dimension sparklines**: use same mapping on per-dimension score history. If unavailable, use `—`.
-- **Trend arrow** (composite and per-dimension): delta = latest − previous day. Delta > +0.5 → `↑`; < −0.5 → `↓`; otherwise → `→`. Use `→` when no prior day exists.
+- **Dimension sparklines**: use same mapping on per-dimension score history. If unavailable, use `-`.
+- **Trend arrow** (composite and per-dimension): delta = latest - previous day. Delta > +0.5 -> `↑`; < -0.5 -> `↓`; otherwise -> `→`. Use `→` when no prior day exists.
 
 **5b. Print the dashboard:**
 
 Emit exactly this format (all `<angle-bracket>` values substituted at runtime):
 
 ```
-### 📊 Prompt Analysis — <DD-MM-YYYY of latest analyzed date>
+### 📊 Prompt Analysis - <DD-MM-YYYY of latest analyzed date>
 
 **Composite score**: <latest composite>/10  <trend-arrow><delta as +0.0 or -0.0>  (<current-streak>-day streak at 7.0+)
 

@@ -4,6 +4,36 @@ All notable changes to Claude Prompt Analyzer are documented here.
 
 ---
 
+## [2.0.1] - 2026-04-22
+
+> **Slash-command fix release.** Resolves the issue where `/prompt-analyzer:analyze` and `/prompt-analyzer:view` did not appear as namespaced commands after installing v2.0.0.
+
+### 🐛 Bug Fixes
+
+- **Slash commands now properly namespaced** - plugin skills moved from the `skills/` directory (which registered them as flat `/analyze` and `/view` entries) to the `commands/` directory, following the Claude Code convention used by other plugins. You will now see `/prompt-analyzer:analyze` and `/prompt-analyzer:view` exactly as the docs describe.
+- **Invalid `skills` field dropped from `plugin.json`** - the previous `"skills": "./skills/"` string caused Claude Code to silently ignore the entries. The field is no longer present; Claude Code auto-discovers `commands/` on load.
+- **Upgrade path from v2.0.0** - session-init now recognizes v2.0.0 as a supported prior version and runs the v2.0 to v2.0.1 migration cleanly.
+
+### 🔧 Improvements
+
+- **Shared pre-processor location** - the `analyzer.js` helper moved from `skills/analyze/analyzer.js` to `scripts/analyzer.js` so it can be referenced from any command without a skill-specific path.
+- **Improved README uninstall section** - documents both user- and project-scope uninstall commands with a manual cleanup fallback, including the less-known marketplace cache files.
+
+### ⚠️ User Action Required
+
+If you installed v2.0.0 and the slash commands never appeared, reinstall from the marketplace:
+
+```
+/plugin uninstall prompt-analyzer@prompt-analyzer-marketplace --scope user
+/plugin marketplace add sahaarijit/claude-prompt-analyzer#main
+/plugin install prompt-analyzer@prompt-analyzer-marketplace
+/reload-plugins
+```
+
+Your data at `~/prompt-analysis/` is preserved and auto-migrated.
+
+---
+
 ## [2.0.0] - 2026-04-22
 
 > **Plugin system conversion.** Claude Prompt Analyzer is now a native Claude Code plugin - installable in two commands, no scripts, no manual file copying.

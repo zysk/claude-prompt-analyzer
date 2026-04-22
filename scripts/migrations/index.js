@@ -15,6 +15,7 @@ const { existsDir, createBackup, restoreFromBackup, deleteBackup } = require('./
 const MIGRATIONS = [
   require('./v1.2-to-v1.3'),
   require('./v1.3-to-v2.0'),
+  require('./v2.0-to-v2.0.1'),
 ];
 
 function parseVersion(v) {

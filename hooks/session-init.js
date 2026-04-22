@@ -19,7 +19,7 @@ const PROMPT_ANALYSIS_ROOT = path.join(HOME, 'prompt-analysis');
 
 const PLUGIN_DATA = process.env.CLAUDE_PLUGIN_DATA || null; // confirmed env var injected by Claude Code into hook processes
 const PLUGIN_ROOT = path.resolve(__dirname, '..'); // __dirname beats process.env.CLAUDE_PLUGIN_ROOT: same value, no dependency on env injection
-const SUPPORTED_FROM_VERSIONS = new Set(['1.2.0', '1.3.0']);
+const SUPPORTED_FROM_VERSIONS = new Set(['1.2.0', '1.3.0', '2.0.0']);
 
 // --- Helpers ---
 
