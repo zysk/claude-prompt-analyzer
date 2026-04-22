@@ -31,7 +31,7 @@
 - **Zero-friction install** - Two commands. Self-configures on first session start.
 - **Safe upgrades** - Data auto-migrated on version updates. Backup taken before; rollback on failure.
 - **Private by default** - All data in `~/prompt-analysis/` on your machine. Never enters your repos.
-- **Anchored to Anthropic's docs** - Scoring rubric sourced from official prompting guidelines; refreshed every 15 days.
+- **Anchored to Anthropic's docs** - Scoring rubric sourced from official prompting guidelines; refreshed on every analyze run with a 3-day cache fallback.
 
 ---
 
