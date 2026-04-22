@@ -48,7 +48,7 @@
 Run these three commands inside Claude Code:
 
 ```
-/plugin marketplace add sahaarijit/claude-prompt-analyzer#main
+/plugin marketplace add zysk/claude-prompt-analyzer#main
 ```
 
 ```

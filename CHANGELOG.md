@@ -31,7 +31,7 @@ If you installed v2.0.0 and the slash commands never appeared, reinstall from th
 
 ```
 /plugin uninstall prompt-analyzer@prompt-analyzer-marketplace --scope user
-/plugin marketplace add sahaarijit/claude-prompt-analyzer#main
+/plugin marketplace add zysk/claude-prompt-analyzer#main
 /plugin install prompt-analyzer@prompt-analyzer-marketplace
 /reload-plugins
 ```
