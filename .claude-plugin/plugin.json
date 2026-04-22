@@ -3,7 +3,7 @@
   "version": "2.0.1",
   "description": "Self-improving prompt quality analysis for Claude Code",
   "author": { "name": "Arijit Saha" },
-  "repository": "https://github.com/sahaarijit/claude-prompt-analyzer",
+  "repository": "https://github.com/zysk/claude-prompt-analyzer",
   "license": "MIT",
   "keywords": ["prompts", "quality", "analysis", "self-improving"]
 }

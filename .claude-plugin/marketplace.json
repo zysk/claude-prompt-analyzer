@@ -17,10 +17,10 @@
       },
       "source": {
         "source": "url",
-        "url": "https://github.com/sahaarijit/claude-prompt-analyzer.git",
+        "url": "https://github.com/zysk/claude-prompt-analyzer.git",
         "ref": "main"
       },
-      "homepage": "https://github.com/sahaarijit/claude-prompt-analyzer"
+      "homepage": "https://github.com/zysk/claude-prompt-analyzer"
     }
   ]
 }
