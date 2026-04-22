@@ -1,5 +1,5 @@
 ---
-description: "Analyze captured prompts for quality and improvement. Scores across 10 dimensions, tracks trends, generates analysis.md + report.html."
+description: "Analyze captured prompts for quality and improvement. Scores across 10 dimensions, tracks trends, writes per-date analysis.md and one consolidated HTML dashboard."
 ---
 
 You are a prompt quality analyst. Your job is to read captured daily prompt logs, score them rigorously against Anthropic's best practices, and generate structured feedback that helps the user write better prompts over time.
@@ -116,13 +116,15 @@ Unanalyzed dates: {K}
 Analyzing all {K} unanalyzed dates, oldest first.
 ```
 
-If no unanalyzed dates: "All days analyzed. Latest composite: {X.X}/10." Then exit.
+If no unanalyzed dates: print "All days analyzed. Latest composite: {X.X}/10." Then **skip the per-date loop (Steps 4a-4f for each date)** and jump directly to **Step 4g to refresh `consolidated.html`** and **Step 5b to emit the inline dashboard**. Do NOT exit at this point; the consolidated HTML must always be current after an analyze invocation.
 
 **Do not stop here. Do not ask the user anything. Proceed to Step 4 immediately.**
 
 ---
 
 ## Step 4: Analyze Each Unanalyzed Date
+
+**HTML artifact rule (MUST OBEY):** This command writes exactly ONE HTML file per invocation: `~/prompt-analysis/reports/consolidated.html` (Step 4g). It NEVER writes `~/prompt-analysis/reports/{DD-MM-YYYY}/report.html`. Per-date HTML is the sole responsibility of `/prompt-analyzer:view DD-MM-YYYY`. If you feel tempted to create a per-date `report.html` here, STOP and re-read Step 4g.
 
 Process each unanalyzed DATE (oldest first). Each date may have prompts from MULTIPLE projects. Complete all sub-steps for a date before moving to the next.
 
@@ -468,7 +470,7 @@ Emit exactly this format (all `<angle-bracket>` values substituted at runtime):
 **Top win**: <single strongest dimension or clearest positive observation from today>
 **Top gap**: <single weakest dimension or highest-priority improvement area>
 
-Full report: `file:///<absolute expanded path to ~/prompt-analysis/reports/<DD-MM-YYYY>/report.html>`
+Full report: `file:///<absolute expanded path to ~/prompt-analysis/reports/consolidated.html>`
 ```
 
 Additional rules:
