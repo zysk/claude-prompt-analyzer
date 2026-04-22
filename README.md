@@ -24,26 +24,12 @@
 
 ## Features
 
-**1. Every prompt you write is automatically tracked**
-Every prompt you type in Claude Code is silently logged, organized by project and day.
-> Data lives in `~/prompt-analysis/` — centralized, outside your project repos.
-
-**2. Deep quality feedback across 10 dimensions**
-Clarity, specificity, context-giving, actionability, scope control, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness.
-> *"Specificity: 3.2/10 — `fix the bug` gives Claude nothing to go on."*
-
-**3. Scores that compound over time**
-Each analysis tracks cumulative scores, streaks, and milestones. You see exactly which dimensions moved.
-> *"5-day streak — composite up 0.8 points from last Monday."*
-
-**4. Self-improving classification**
-The system learns your prompt habits from LLM feedback and improves classification accuracy over time.
-
-**5. Your data survives repo changes**
-Prompts are stored in `~/prompt-analysis/` — not inside project directories. Deleting or moving a repo never affects your prompt history.
-
-**6. One-command setup**
-A deploy script installs everything into `~/.claude/` in one step.
+- **Auto-capture** — Every prompt you type is silently logged. No setup, no opt-in per project.
+- **10-dimension scoring** — Clarity, specificity, context-giving, actionability, scope, command usage, pattern efficiency, interaction style, friction avoidance, automation awareness.
+- **Day-over-day progress** — Composite scores, streaks, and milestones tracked automatically.
+- **Centralized storage** — All data in `~/prompt-analysis/` — outside your repos, survives repo changes.
+- **Self-improving classification** — Classification accuracy improves over time from LLM feedback.
+- **One-command setup** — Deploy script installs everything in one step.
 
 ---
 
@@ -115,13 +101,3 @@ flowchart TD
     F --> H["Report displayed\nin Claude Code"]
 ```
 
----
-
-<p align="center">
-  <img src="assets/claude-jumping.svg" alt="divider" width="60" height="50">
-</p>
-
-## Credits
-
-- Jumping Claude mascot from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice)
-- Built with zero npm dependencies. Pure Node.js standard library.
