@@ -20,6 +20,8 @@ const ALLOWLIST = [
   'scripts/migrations/v1.2-to-v1.3.js',
   'scripts/migrations/v1.3-to-v2.0.js',
   'README.md',
+  'CHANGELOG.md',
+  'assets/claude-jumping.svg',
   'LICENSE',
 ];
 
