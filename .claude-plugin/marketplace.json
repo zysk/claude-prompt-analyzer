@@ -1,0 +1,26 @@
+{
+  "name": "prompt-analyzer-marketplace",
+  "description": "Prompt quality analysis for Claude Code",
+  "owner": {
+    "name": "Arijit Saha",
+    "email": "arijit.saha@zysk.tech"
+  },
+  "plugins": [
+    {
+      "name": "prompt-analyzer",
+      "description": "Self-improving prompt quality analysis system for Claude Code",
+      "version": "2.0.0",
+      "category": "development",
+      "author": {
+        "name": "Arijit Saha",
+        "email": "arijit.saha@zysk.tech"
+      },
+      "source": {
+        "source": "url",
+        "url": "https://github.com/sahaarijit/claude-prompt-analyzer.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/sahaarijit/claude-prompt-analyzer"
+    }
+  ]
+}

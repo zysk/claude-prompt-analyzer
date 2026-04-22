@@ -9,6 +9,7 @@ const { spawnSync } = require('child_process');
 
 const ALLOWLIST = [
   '.claude-plugin/plugin.json',
+  '.claude-plugin/marketplace.json',
   'hooks/hooks.json',
   'hooks/capture-prompts.js',
   'hooks/session-init.js',
