@@ -65,17 +65,31 @@ Run the same two install commands above. Your existing prompt history at `~/prom
 
 ### Uninstall
 
-If installed at **user level** (default):
+Check which scope you installed with:
+
+```
+/plugin
+```
+
+Then use the matching uninstall command.
+
+**User-level install:**
 
 ```
 /plugin uninstall prompt-analyzer@prompt-analyzer-marketplace --scope user
 ```
 
-If installed at **project level**:
+**Project-level install:**
 
 ```
 /plugin uninstall prompt-analyzer@prompt-analyzer-marketplace
 ```
+
+If neither works, clean up manually:
+
+1. Delete the cache: `rm -rf ~/.claude/plugins/cache/prompt-analyzer-marketplace`
+2. Remove the entry from `~/.claude/plugins/installed_plugins.json` (key: `prompt-analyzer@prompt-analyzer-marketplace`)
+3. Remove `"prompt-analyzer@prompt-analyzer-marketplace": true` from `enabledPlugins` in `~/.claude/settings.json`
 
 > Your data at `~/prompt-analysis/` is **not** deleted. Remove that folder manually if you want a clean slate.
 
