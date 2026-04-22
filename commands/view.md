@@ -4,6 +4,13 @@ description: "Reopen an existing prompt analysis report. Zero LLM cost. Supports
 
 Reopen an existing analysis report. Do NOT re-run analysis. Do NOT write to state.json or any data file. This command is strictly read-only.
 
+## Behavior Rules (MUST OBEY)
+
+- **DO NOT ask the user any questions.** Not about which date, not about which format, not about anything.
+- **DO NOT offer options or choices.** If the argument is empty, default to latest; do not prompt the user to pick.
+- **DO NOT stop for confirmation.** Resolve the target, read the file, emit the dashboard.
+- If the requested report does not exist, print the nearest-dates line defined in Step 3 and stop silently. Do not ask "want me to analyze it instead?"
+
 **Invocations:**
 - `/prompt-analyzer:view` - most recent date in `~/prompt-analysis/reports/`
 - `/prompt-analyzer:view today` - today in DD-MM-YYYY

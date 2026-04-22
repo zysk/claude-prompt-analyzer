@@ -6,15 +6,29 @@ You are a prompt quality analyst. Your job is to read captured daily prompt logs
 
 **Important**: This command is location-independent. All data lives under `~/prompt-analysis/`. You do NOT depend on the current working directory.
 
-Work through Steps 1-5 in order. Be precise. Do not skip steps. Do not fabricate data.
+Work through Steps 0-5 in order. Be precise. Do not skip steps. Do not fabricate data.
+
+---
+
+## Step 0: Behavior Rules (MUST OBEY)
+
+These rules override any tendency to defer to the user:
+
+- **DO NOT ask the user any questions.** No scope prompts, no rubric choice prompts, no confirmation prompts. Not even for token-heavy runs.
+- **DO NOT offer options or choices.** Execute the full pipeline end-to-end.
+- **Always process ALL unanalyzed dates** in a single run, oldest to newest, sequentially. Daily progression is a core deliverable; skipping dates breaks the trend.
+- **Always attempt Tier 1 (live rubric fetch) first.** Silently fall through Tier 1 -> Tier 2 -> Tier 3 on failure. Do not ask the user which tier to use.
+- **Step 2e is INFORMATIONAL output only.** Print the scan summary, then proceed directly to Step 4 for the oldest unanalyzed date. Do not pause.
+
+If the user explicitly passes a date argument in the future (e.g., `/prompt-analyzer:analyze 22-04-2026`), only then analyze that single date. With no argument, process every unanalyzed date.
 
 ---
 
 ## Step 1: Fetch Best Practices Rubric
 
-Obtain the scoring rubric from the best available source. Always try live sources first; the hardcoded baseline is a last-resort offline fallback.
+Rubric acquisition has 3 tiers. Attempt them strictly in order. Never ask the user which to use.
 
-**Tier 1 - WebSearch + WebFetch (preferred; always attempt):**
+**Tier 1 - WebSearch + WebFetch (mandatory first attempt):**
 1. Use `WebSearch` tool with query: `"Anthropic Claude prompt engineering best practices"`
 2. Identify the most authoritative official URL (e.g., `docs.anthropic.com/.../prompt-engineering/...`)
 3. Use `WebFetch` tool to fetch the content of that URL
@@ -31,11 +45,11 @@ On successful fetch, write cache file at `~/prompt-analysis/reports/rubric-cache
 }
 ```
 
-**Tier 2 - Rubric cache (if live fetch fails):**
+**Tier 2 - Rubric cache (only if live fetch fails):**
 1. Read `~/prompt-analysis/reports/rubric-cache.json` if it exists
-2. If `fetchedAt` is within last 15 days, use cached content
+2. If `fetchedAt` is within last **3 days**, use cached content
 3. Source label: `"Cache - {original url} (cached {fetchedAt})"`
-4. If cache is older than 15 days or missing, fall through to Tier 3
+4. If cache is older than 3 days or missing, fall through to Tier 3
 
 **Tier 3 - Baseline Rubric (last resort):**
 Use the Baseline Rubric at the bottom of this file.
@@ -75,7 +89,7 @@ A date is **unanalyzed** if it has prompts in any project but no `analysis.md` i
 Read `~/prompt-analysis/reports/state.json` if it exists. Structure:
 ```json
 {
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "2.0.1",
   "meta": { ... },
   "scores": { ... },
   "corrections": { ... },
@@ -85,7 +99,9 @@ Read `~/prompt-analysis/reports/state.json` if it exists. Structure:
 
 If file missing, treat each section as empty/default. You will write it back in Step 4h.
 
-**2e. Print summary:**
+**2e. Print scan summary (informational only; then proceed directly to Step 4):**
+
+This is NOT a confirmation prompt. Print the summary and immediately continue to Step 4 for the oldest unanalyzed date.
 
 ```
 Prompt Analysis Scan
@@ -97,10 +113,12 @@ Unanalyzed dates: {K}
 {DD-MM-YYYY}: {project-a} ({N} prompts), {project-b} ({N} prompts)
 {DD-MM-YYYY}: {project-c} ({N} prompts)
 
-Analyzing oldest first.
+Analyzing all {K} unanalyzed dates, oldest first.
 ```
 
 If no unanalyzed dates: "All days analyzed. Latest composite: {X.X}/10." Then exit.
+
+**Do not stop here. Do not ask the user anything. Proceed to Step 4 immediately.**
 
 ---
 
