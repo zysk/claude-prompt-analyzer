@@ -52,7 +52,7 @@ Run these two commands inside Claude Code:
 ```
 
 ```
-/plugin install prompt-analyzer@sahaarijit-claude-prompt-analyzer
+/plugin install prompt-analyzer@prompt-analyzer-marketplace
 ```
 
 Then **restart Claude Code**. The plugin configures itself on the first new session - no further steps.
@@ -65,8 +65,16 @@ Run the same two install commands above. Your existing prompt history at `~/prom
 
 ### Uninstall
 
+If installed at **user level** (default):
+
 ```
-/plugin uninstall prompt-analyzer@sahaarijit-claude-prompt-analyzer
+/plugin uninstall prompt-analyzer@prompt-analyzer-marketplace --scope user
+```
+
+If installed at **project level**:
+
+```
+/plugin uninstall prompt-analyzer@prompt-analyzer-marketplace
 ```
 
 > Your data at `~/prompt-analysis/` is **not** deleted. Remove that folder manually if you want a clean slate.
