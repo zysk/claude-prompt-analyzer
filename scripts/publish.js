@@ -123,7 +123,7 @@ async function main() {
       } else {
         gitIn(worktreePath, ['push', 'origin', 'main']);
       }
-      gitIn(worktreePath, ['push', 'origin', `v${version}`]);
+      gitIn(worktreePath, ['push', 'origin', `refs/tags/v${version}:refs/tags/v${version}`]);
 
       print(`\nPublished v${version} to main and tagged v${version}.`);
     } finally {
