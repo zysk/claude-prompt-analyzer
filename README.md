@@ -52,7 +52,7 @@ Run these three commands inside Claude Code:
 ```
 
 ```
-/plugin install prompt-analyzer@prompt-analyzer-marketplace
+/plugin install prompt-analyzer@prompt-analyzer
 ```
 
 ```
@@ -80,21 +80,21 @@ Then run the matching uninstall command.
 **User-level install:**
 
 ```
-/plugin uninstall prompt-analyzer@prompt-analyzer-marketplace --scope user
+/plugin uninstall prompt-analyzer@prompt-analyzer --scope user
 ```
 
 **Project-level install:**
 
 ```
-/plugin uninstall prompt-analyzer@prompt-analyzer-marketplace
+/plugin uninstall prompt-analyzer@prompt-analyzer
 ```
 
 If neither command succeeds (most often because the identifier or scope does not match the registry), clean up manually:
 
-1. Delete the cache: `rm -rf ~/.claude/plugins/cache/prompt-analyzer-marketplace`
-2. Remove the entry keyed `prompt-analyzer@prompt-analyzer-marketplace` from `~/.claude/plugins/installed_plugins.json`
-3. Remove `"prompt-analyzer@prompt-analyzer-marketplace": true` from `enabledPlugins` in `~/.claude/settings.json`
-4. (Optional) Remove the `prompt-analyzer-marketplace` entry from `extraKnownMarketplaces` in `~/.claude/settings.json` and from `~/.claude/plugins/known_marketplaces.json`, plus the cached marketplace folder at `~/.claude/plugins/marketplaces/prompt-analyzer-marketplace/`
+1. Delete the cache: `rm -rf ~/.claude/plugins/cache/prompt-analyzer`
+2. Remove the entry keyed `prompt-analyzer@prompt-analyzer` from `~/.claude/plugins/installed_plugins.json`
+3. Remove `"prompt-analyzer@prompt-analyzer": true` from `enabledPlugins` in `~/.claude/settings.json`
+4. (Optional) Remove the `prompt-analyzer` entry from `extraKnownMarketplaces` in `~/.claude/settings.json` and from `~/.claude/plugins/known_marketplaces.json`, plus the cached marketplace folder at `~/.claude/plugins/marketplaces/prompt-analyzer/`
 
 > Your data at `~/prompt-analysis/` is **not** deleted. Remove that folder manually if you want a clean slate.
 
