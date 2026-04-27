@@ -30,9 +30,9 @@ All notable changes to Claude Prompt Analyzer are documented here.
 If you installed v2.0.0 and the slash commands never appeared, reinstall from the marketplace:
 
 ```
-/plugin uninstall prompt-analyzer@prompt-analyzer-marketplace --scope user
+/plugin uninstall prompt-analyzer@prompt-analyzer --scope user
 /plugin marketplace add zysk/claude-prompt-analyzer#main
-/plugin install prompt-analyzer@prompt-analyzer-marketplace
+/plugin install prompt-analyzer@prompt-analyzer
 /reload-plugins
 ```
 
